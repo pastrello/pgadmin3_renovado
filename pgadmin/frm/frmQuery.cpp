@@ -10,6 +10,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "pgAdmin3.h"
+#include "ctl/ctlAuiNotebook.h"
 
 // wxWindows headers
 #include <wx/wx.h>
@@ -249,6 +250,7 @@ frmQuery::frmQuery(frmMain *form, const wxString &_title, pgConn *_conn, const w
 
 	// notify wxAUI which frame to use
 	manager.SetManagedWindow(this);
+	pgApplyAuiStyle(manager);
 	manager.SetFlags(wxAUI_MGR_DEFAULT | wxAUI_MGR_TRANSPARENT_DRAG);
 
 	SetMinSize(wxSize(450, 300));

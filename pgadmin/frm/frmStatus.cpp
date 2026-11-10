@@ -210,6 +210,7 @@ frmStatus::frmStatus(frmMain *form, const wxString &_title, pgConn *conn) : pgFr
 
 	// Notify wxAUI which frame to use
 	manager.SetManagedWindow(this);
+	pgApplyAuiStyle(manager);
 	manager.SetFlags(wxAUI_MGR_DEFAULT | wxAUI_MGR_TRANSPARENT_DRAG | wxAUI_MGR_ALLOW_ACTIVE_PANE);
 
 	// Set different window's attributes

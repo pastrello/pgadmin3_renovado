@@ -27,4 +27,9 @@ private:
 	DECLARE_EVENT_TABLE()
 };
 
+// Size and painting of the modern splash / About window, used when no
+// branding.ini provides its own image. The lines are drawn at the bottom.
+wxSize pgModernSplashSize(wxWindow *win);
+void pgDrawModernSplash(wxWindow *win, wxDC &dc, const wxArrayString &lines);
+
 #endif

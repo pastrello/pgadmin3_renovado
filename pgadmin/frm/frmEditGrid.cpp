@@ -15,6 +15,7 @@
 
 // App headers
 #include "pgAdmin3.h"
+#include "ctl/ctlAuiNotebook.h"
 #include "utils/pgDefs.h"
 #include "frm/frmMain.h"
 #include "frm/menu.h"
@@ -105,6 +106,7 @@ frmEditGrid::frmEditGrid(frmMain *form, const wxString &_title, pgConn *_conn, p
 
 	// notify wxAUI which frame to use
 	manager.SetManagedWindow(this);
+	pgApplyAuiStyle(manager);
 	manager.SetFlags(wxAUI_MGR_DEFAULT | wxAUI_MGR_TRANSPARENT_DRAG);
 
 	SetMinSize(wxSize(300, 350));

@@ -13,6 +13,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "pgAdmin3.h"
+#include "ctl/ctlAuiNotebook.h"
 
 #ifndef WIN32
 #include <unistd.h>
@@ -141,6 +142,7 @@ frmMain::frmMain(const wxString &title)
 
 	// notify wxAUI which frame to use
 	manager.SetManagedWindow(this);
+	pgApplyAuiStyle(manager);
 	manager.SetFlags(wxAUI_MGR_DEFAULT | wxAUI_MGR_TRANSPARENT_DRAG | wxAUI_MGR_ALLOW_ACTIVE_PANE);
 
 	// wxGTK needs this deferred

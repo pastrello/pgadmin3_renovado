@@ -10,6 +10,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "pgAdmin3.h"
+#include "ctl/ctlAuiNotebook.h"
 
 // wxWindows headers
 #include <wx/wx.h>
@@ -104,6 +105,7 @@ frmDatabaseDesigner::frmDatabaseDesigner(frmMain *form, const wxString &_title, 
 
 	// notify wxAUI which frame to use
 	manager.SetManagedWindow(this);
+	pgApplyAuiStyle(manager);
 	manager.SetFlags(wxAUI_MGR_DEFAULT | wxAUI_MGR_TRANSPARENT_DRAG);
 
 	SetFont(settings->GetSystemFont());

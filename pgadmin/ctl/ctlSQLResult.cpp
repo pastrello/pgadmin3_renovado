@@ -312,6 +312,38 @@ void ctlSQLResult::OnGridSelect(wxGridRangeSelectEvent &event)
 	SetFocus();
 }
 
+wxGridCellAttr *sqlResultTable::GetAttr(int row, int col, wxGridCellAttr::wxAttrKind kind)
+{
+	wxGridCellAttr *attr = wxGridTableBase::GetAttr(row, col, kind);
+	if (attr || !thread || !thread->DataValid() || col < 0 || !GetView())
+		return attr;
+
+	thread->DataSet()->Locate(row + 1);
+	bool isNull = thread->DataSet()->IsNull(col);
+	bool numeric = thread->DataSet()->ColTypClass(col) == PGTYPCLASS_NUMERIC;
+	bool odd = (row % 2) == 1;
+	if (!isNull && !numeric && !odd)
+		return NULL;
+
+	attr = new wxGridCellAttr();
+	if (odd)
+	{
+		wxColour back = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
+		bool dark = wxSystemSettings::GetAppearance().IsDark();
+		attr->SetBackgroundColour(back.ChangeLightness(dark ? 112 : 96));
+	}
+	if (isNull)
+	{
+		wxFont font = GetView()->GetDefaultCellFont();
+		font.MakeItalic();
+		attr->SetFont(font);
+		attr->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
+	}
+	else if (numeric)
+		attr->SetAlignment(wxALIGN_RIGHT, wxALIGN_CENTRE);
+	return attr;
+}
+
 wxString sqlResultTable::GetValue(int row, int col)
 {
 	if (thread && thread->DataValid())

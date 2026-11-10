@@ -79,6 +79,8 @@ frmDebugger::frmDebugger(frmMain *_parent, dbgController *_controller,
 	SetFont(settings->GetSystemFont());
 
 	m_manager.SetManagedWindow(this);
+
+	pgApplyAuiStyle(m_manager);
 	m_manager.SetFlags(wxAUI_MGR_DEFAULT | wxAUI_MGR_TRANSPARENT_DRAG);
 
 	// Define the icon for this window

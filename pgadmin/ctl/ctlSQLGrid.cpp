@@ -47,10 +47,28 @@ ctlSQLGrid::ctlSQLGrid(wxWindow *parent, wxWindowID id, const wxPoint &pos, cons
 	fntLabel.SetWeight(wxBOLD);
 	SetLabelFont(fntLabel);
 	SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
-	SetRowLabelSize(50);
-	SetDefaultRowSize(fntCells.GetPointSize() * 2);
-	SetColLabelSize(fntLabel.GetPointSize() * 4);
+	SetRowLabelSize(FromDIP(50));
 	SetDefaultCellOverflow(false);
+
+	// Modern look: native (flat) column header, theme colours, subtle grid
+	// lines and a little more vertical room in each row.
+	UseNativeColHeader(true);
+	bool dark = wxSystemSettings::GetAppearance().IsDark();
+	wxColour window = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
+	SetDefaultCellBackgroundColour(window);
+	SetDefaultCellTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
+	SetLabelBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+	SetLabelTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
+	SetGridLineColour(window.ChangeLightness(dark ? 135 : 88));
+	SetCellHighlightColour(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
+	SetSelectionBackground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
+	SetSelectionForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
+
+	wxClientDC dc(this);
+	dc.SetFont(fntCells);
+	SetDefaultRowSize(dc.GetCharHeight() + FromDIP(8));
+	dc.SetFont(fntLabel);
+	SetColLabelSize(dc.GetCharHeight() + FromDIP(12));
 
 	Connect(wxID_ANY, wxEVT_GRID_LABEL_LEFT_DCLICK, wxGridEventHandler(ctlSQLGrid::OnLabelDoubleClick));
 }

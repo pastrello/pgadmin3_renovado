@@ -94,6 +94,8 @@ public:
 	{
 		return;
 	}
+	// Zebra rows, grey italic NULLs and right-aligned numbers
+	wxGridCellAttr *GetAttr(int row, int col, wxGridCellAttr::wxAttrKind kind) wxOVERRIDE;
 	void SetThread(pgQueryThread *t)
 	{
 		thread = t;

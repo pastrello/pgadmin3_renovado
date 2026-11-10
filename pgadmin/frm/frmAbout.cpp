@@ -21,6 +21,7 @@
 #include "copyright.h"
 #include "version.h"
 #include "svnversion.h"
+#include "frm/frmSplash.h"
 
 #define VERSION_WITH_DATE_AND_SVN       wxT("Version ") VERSION_STR wxT(" (") __TDATE__ wxT(", rev: ") wxT(VERSION_SVN) wxT(")")
 
@@ -39,13 +40,16 @@ frmAbout::frmAbout(wxFrame *parent)
 	: wxFrame(parent, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(100, 100), 0 | wxFRAME_SHAPED | wxSIMPLE_BORDER | wxFRAME_NO_TASKBAR | wxSTAY_ON_TOP)
 {
 	appearanceFactory->SetIcons(this);
-	about = appearanceFactory->GetSplashImage();
-
-	SetClientSize(about.GetWidth(), about.GetHeight());
-
+	if (appearanceFactory->IsBranded())
+	{
+		about = appearanceFactory->GetSplashImage();
+		SetClientSize(about.GetWidth(), about.GetHeight());
 #ifndef __WXGTK__
-	SetWindowShape();
+		SetWindowShape();
 #endif
+	}
+	else
+		SetClientSize(pgModernSplashSize(this));
 
 	CenterOnParent();
 }
@@ -73,6 +77,15 @@ void frmAbout::OnPaint(wxPaintEvent &WXUNUSED(event))
 	wxPoint pos = appearanceFactory->GetSplashTextPos();
 
 	wxPaintDC dc(this);
+	if (!appearanceFactory->IsBranded())
+	{
+		wxArrayString lines;
+		lines.Add(VERSION_WITH_DATE_AND_SVN);
+		lines.Add(COPYRIGHT);
+		lines.Add(LICENSE);
+		pgDrawModernSplash(this, dc, lines);
+		return;
+	}
 	dc.DrawBitmap(about, 0, 0, true);
 	dc.SetTextForeground(appearanceFactory->GetSplashTextColour());
 	dc.SetFont(appearanceFactory->GetSplashTextFont());
