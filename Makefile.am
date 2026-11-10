@@ -17,7 +17,8 @@ EXTRA_DIST = \
 	$(top_srcdir)/DEVELOPERS \
 	$(top_srcdir)/INSTALL \
 	$(top_srcdir)/LICENSE \
-	$(top_srcdir)/README \
+	$(top_srcdir)/README.md \
+	$(top_srcdir)/README-original.txt \
 	$(top_srcdir)/TODO \
 	$(top_srcdir)/bootstrap \
 	$(top_srcdir)/configure.ac.in \
