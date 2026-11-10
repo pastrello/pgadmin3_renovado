@@ -2318,8 +2318,8 @@ void frmQuery::OnExecScript(wxCommandEvent &event)
 
 	// Clear markers and indicators
 	sqlQuery->MarkerDeleteAll(0);
-	sqlQuery->StartStyling(0, wxSTC_INDICS_MASK);
-	sqlQuery->SetStyling(sqlQuery->GetText().Length(), 0);
+	sqlQuery->SetIndicatorCurrent(0);
+	sqlQuery->IndicatorClearRange(0, sqlQuery->GetLength());
 
 	// Menu stuff to initialize
 	setTools(true);
@@ -2473,8 +2473,8 @@ void frmQuery::execQuery(const wxString &query, int resultToRetrieve, bool singl
 
 	// Clear markers and indicators
 	sqlQuery->MarkerDeleteAll(0);
-	sqlQuery->StartStyling(0, wxSTC_INDICS_MASK);
-	sqlQuery->SetStyling(sqlQuery->GetText().Length(), 0);
+	sqlQuery->SetIndicatorCurrent(0);
+	sqlQuery->IndicatorClearRange(0, sqlQuery->GetLength());
 
 	if (!sqlQuery->IsChanged())
 		setExtendedTitle();
@@ -2849,7 +2849,6 @@ void frmQuery::OnQueryComplete(pgQueryResultEvent &ev)
 
 				// Set an indicator on the error word (break on any kind of bracket, a space or full stop)
 				int sPos = errPos + selStart - 1, wEnd = 1;
-				sqlQueryExec->StartStyling(sPos, wxSTC_INDICS_MASK);
 				int c = sqlQueryExec->GetCharAt(sPos + wEnd);
 				size_t len = sqlQueryExec->GetText().Length();
 				while(c != ' ' && c != '(' && c != '{' && c != '[' && c != '.' &&
@@ -2858,7 +2857,9 @@ void frmQuery::OnQueryComplete(pgQueryResultEvent &ev)
 					wEnd++;
 					c = sqlQueryExec->GetCharAt(sPos + wEnd);
 				}
-				sqlQueryExec->SetStyling(wEnd, wxSTC_INDIC0_MASK);
+				// Scintilla 3+ uses the indicator API instead of style bits
+				sqlQueryExec->SetIndicatorCurrent(0);
+				sqlQueryExec->IndicatorFillRange(sPos, wEnd);
 
 				int line = 0, maxLine = sqlQueryExec->GetLineCount();
 				while (line < maxLine && sqlQueryExec->GetLineEndPosition(line) < errPos + selStart + 1)

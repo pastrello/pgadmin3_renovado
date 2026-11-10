@@ -28,7 +28,8 @@
 /*
  * List of (keyword-name, keyword-token-value) pairs.
  */
-#define PG_KEYWORD(a,b,c) {a,c},
+/* PostgreSQL 14+ added a 4th argument (BARE_LABEL / AS_LABEL); ignore it. */
+#define PG_KEYWORD(a,b,c,...) {a,c},
 const ScanKeyword ScanKeywords[] = {
 #include <parser/kwlist.h>
 };

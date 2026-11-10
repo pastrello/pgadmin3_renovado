@@ -249,11 +249,9 @@ void gqbGridOrderTable::changesPositions(int sPos, int dPos)
 		kindOfOrder->Item(dPos) = tmpKind;
 	}
 
-	wxGridTableMessage msg( this,
-	                        wxGRIDTABLE_REQUEST_VIEW_GET_VALUES,
-	                        sPos,
-	                        1 );
-	GetView()->ProcessTableMessage( msg );
+	// wxGRIDTABLE_REQUEST_VIEW_GET_VALUES was removed from wxWidgets;
+	// just repaint the swapped rows.
+	GetView()->ForceRefresh();
 
 }
 

@@ -22,7 +22,7 @@ class hdDrawingEditor;
 class hdIConnector;
 class hdITool;
 
-WX_DEFINE_ARRAY_INT(bool, wxArrayBool);
+WX_DEFINE_ARRAY_CHAR(char, wxArrayBool); // vector<bool> cannot back a wxArray
 
 class hdIFigure : public hdObject
 {

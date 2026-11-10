@@ -787,7 +787,10 @@ pgFunction *pgFunctionFactory::AppendFunctions(pgObject *obj, pgSchema *schema, 
 				function->iSetArgDefValCount(functions->GetLong(wxT("pronargdefaults")));
 
 				// Check if it is a window function
-				function->iSetIsWindow(functions->GetBool(wxT("proiswindow")));
+				if (obj->GetConnection()->BackendMinimumVersion(11, 0))
+					function->iSetIsWindow(functions->GetVal(wxT("prokind")) == wxT("w"));
+				else
+					function->iSetIsWindow(functions->GetBool(wxT("proiswindow")));
 			}
 			else
 				function->iSetIsWindow(false);
@@ -1061,7 +1064,7 @@ wxString pgProcedure::GetExecSql(ctlTree *browser)
 pgObject *pgFunctionFactory::CreateObjects(pgCollection *collection, ctlTree *browser, const wxString &restr)
 {
 	wxString funcRestriction = wxT(
-	                               " WHERE proisagg = FALSE AND pronamespace = ") + NumToStr(collection->GetSchema()->GetOid())
+	                               " WHERE ") + collection->GetConnection()->PlainFunctionRestriction() + wxT(" AND pronamespace = ") + NumToStr(collection->GetSchema()->GetOid())
 	                           + wxT("::oid\n   AND typname NOT IN ('trigger', 'event_trigger') \n");
 
 	if (collection->GetConnection()->EdbMinimumVersion(8, 1))
@@ -1082,7 +1085,7 @@ pgCollection *pgFunctionFactory::CreateCollection(pgObject *obj)
 pgObject *pgTriggerFunctionFactory::CreateObjects(pgCollection *collection, ctlTree *browser, const wxString &restr)
 {
 	wxString funcRestriction = wxT(
-	                               " WHERE proisagg = FALSE AND pronamespace = ") + NumToStr(collection->GetSchema()->GetOid())
+	                               " WHERE ") + collection->GetConnection()->PlainFunctionRestriction() + wxT(" AND pronamespace = ") + NumToStr(collection->GetSchema()->GetOid())
 	                           + wxT("::oid\n");
 	if(collection->GetConnection()->BackendMinimumVersion(9, 3))
 	{
@@ -1101,7 +1104,7 @@ pgObject *pgTriggerFunctionFactory::CreateObjects(pgCollection *collection, ctlT
 pgObject *pgProcedureFactory::CreateObjects(pgCollection *collection, ctlTree *browser, const wxString &restr)
 {
 	wxString funcRestriction = wxT(
-	                               " WHERE proisagg = FALSE AND pronamespace = ") + NumToStr(collection->GetSchema()->GetOid())
+	                               " WHERE ") + collection->GetConnection()->PlainFunctionRestriction() + wxT(" AND pronamespace = ") + NumToStr(collection->GetSchema()->GetOid())
 	                           + wxT("::oid AND lanname = 'edbspl'\n");
 
 	if (collection->GetConnection()->EdbMinimumVersion(8, 1))

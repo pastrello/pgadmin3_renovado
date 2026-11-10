@@ -100,6 +100,15 @@ public:
 	bool BackendMinimumVersion(int major, int minor, int patch);
 	bool EdbMinimumVersion(int major, int minor);
 	wxString SystemNamespaceRestriction(const wxString &nsp);
+	// SQL condition selecting plain/window functions from pg_proc (no
+	// aggregates). PostgreSQL 11 replaced proisagg by prokind and added
+	// procedures (prokind 'p'), which are excluded as well.
+	wxString PlainFunctionRestriction(const wxString &alias = wxEmptyString)
+	{
+		if (BackendMinimumVersion(11, 0))
+			return alias + wxT("prokind IN ('f', 'w')");
+		return alias + wxT("proisagg = FALSE");
+	}
 	int GetMajorVersion() const
 	{
 		return majorVersion;

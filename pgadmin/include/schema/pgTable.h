@@ -76,6 +76,31 @@ public:
 	{
 		unlogged = b;
 	}
+	// Native partitioning (PostgreSQL 10+)
+	wxString GetPartitionKeyDef() const
+	{
+		return partKeyDef;
+	}
+	void iSetPartitionKeyDef(const wxString &s)
+	{
+		partKeyDef = s;
+	}
+	wxString GetPartitionBound() const
+	{
+		return partBound;
+	}
+	void iSetPartitionBound(const wxString &s)
+	{
+		partBound = s;
+	}
+	bool GetIsNativePartitioned() const
+	{
+		return !partKeyDef.IsEmpty();
+	}
+	bool GetIsNativePartition() const
+	{
+		return !partBound.IsEmpty();
+	}
 	wxString GetPrimaryKey() const
 	{
 		return primaryKey;
@@ -562,6 +587,7 @@ private:
 	wxString checksum;
 	wxString partitionDef;
 	bool isPartitioned;
+	wxString partKeyDef, partBound;
 	bool hasOids, unlogged, hasSubclass, rowsCounted, isReplicated, showExtendedStatistics, distributionIsRandom;
 
 	wxString toast_fillFactor, toast_autovacuum_vacuum_threshold,

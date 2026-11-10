@@ -31,3 +31,6 @@ stamp-h1
 cscope.out
 cscope.files
 tags
+
+# CMake build directory (Windows build, see BUILD-WINDOWS.md)
+/build/

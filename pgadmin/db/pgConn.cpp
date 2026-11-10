@@ -265,8 +265,13 @@ bool pgConn::Initialize()
 		if (BackendMinimumVersion(9, 0))
 			sql += wxT("SET bytea_output=escape;\n");
 
-		sql += wxT("SELECT oid, pg_encoding_to_char(encoding) AS encoding, datlastsysoid\n")
-		       wxT("  FROM pg_database WHERE ");
+		// datlastsysoid was removed in PostgreSQL 15; all OIDs below
+		// FirstNormalObjectId (16384) are system objects there.
+		if (BackendMinimumVersion(15, 0))
+			sql += wxT("SELECT oid, pg_encoding_to_char(encoding) AS encoding, 16383::oid AS datlastsysoid\n");
+		else
+			sql += wxT("SELECT oid, pg_encoding_to_char(encoding) AS encoding, datlastsysoid\n");
+		sql += wxT("  FROM pg_database WHERE ");
 
 		if (save_oid)
 			sql += wxT("oid = ") + NumToStr(save_oid);

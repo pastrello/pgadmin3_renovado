@@ -77,6 +77,24 @@ public:
 	{
 		defaultVal = s;
 	}
+	// attidentity (PG10+): "a" = ALWAYS, "d" = BY DEFAULT, empty = none
+	wxString GetIdentity() const
+	{
+		return identity;
+	}
+	void iSetIdentity(const wxString &s)
+	{
+		identity = s;
+	}
+	// attgenerated (PG12+): "s" = STORED, "v" = VIRTUAL (PG18), empty = none
+	wxString GetGenerated() const
+	{
+		return generated;
+	}
+	void iSetGenerated(const wxString &s)
+	{
+		generated = s;
+	}
 	long GetColNumber() const
 	{
 		return colNumber;
@@ -298,6 +316,7 @@ public:
 	}
 
 private:
+	wxString identity, generated;
 	wxString varTypename, quotedTypename, defaultVal, tableName, quotedFullTable, defaultStorage, storage, rawTypename;
 	wxString serialSequence, serialSchema, pkCols, inheritedTableName, collation;
 	long colNumber, length, precision, statistics, attstattarget;

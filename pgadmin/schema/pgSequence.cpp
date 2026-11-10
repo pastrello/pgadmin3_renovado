@@ -116,9 +116,19 @@ bool pgSequence::DropObject(wxFrame *frame, ctlTree *browser, bool cascaded)
 
 void pgSequence::UpdateValues()
 {
-	pgSet *sequence = ExecuteSet(
-	                      wxT("SELECT last_value, min_value, max_value, cache_value, is_cycled, increment_by, is_called\n")
-	                      wxT("  FROM ") + GetQuotedFullIdentifier());
+	wxString query;
+	if (GetConnection()->BackendMinimumVersion(10, 0))
+	{
+		// Since PostgreSQL 10 the sequence parameters live in pg_sequence.
+		query = wxT("SELECT s.last_value, p.seqmin AS min_value, p.seqmax AS max_value, p.seqcache AS cache_value,\n")
+		        wxT("       p.seqcycle AS is_cycled, p.seqincrement AS increment_by, s.is_called\n")
+		        wxT("  FROM ") + GetQuotedFullIdentifier() + wxT(" s, pg_catalog.pg_sequence p\n")
+		        wxT(" WHERE p.seqrelid = ") + GetOidStr();
+	}
+	else
+		query = wxT("SELECT last_value, min_value, max_value, cache_value, is_cycled, increment_by, is_called\n")
+		        wxT("  FROM ") + GetQuotedFullIdentifier();
+	pgSet *sequence = ExecuteSet(query);
 	if (sequence)
 	{
 		lastValue = sequence->GetLongLong(wxT("last_value"));

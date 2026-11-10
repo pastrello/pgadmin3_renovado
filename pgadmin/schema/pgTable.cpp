@@ -487,14 +487,30 @@ wxString pgTable::GetSql(ctlTree *browser)
 		if (!prevComment.IsEmpty())
 			cols_sql += wxT(" -- ") + firstLineOnly(prevComment);
 
-		sql += wxT("\n(\n") + cols_sql + wxT("\n)");
-
-		if (GetInheritedTableCount())
+		if (GetIsNativePartition())
 		{
-			sql += wxT("\nINHERITS (") + GetQuotedInheritedTables() + wxT(")");
+			// Columns and inherited constraints come from the parent table.
+			sql += wxT("\nPARTITION OF ") + GetQuotedInheritedTables()
+			       + wxT("\n") + GetPartitionBound();
+		}
+		else
+		{
+			sql += wxT("\n(\n") + cols_sql + wxT("\n)");
+
+			if (GetInheritedTableCount())
+			{
+				sql += wxT("\nINHERITS (") + GetQuotedInheritedTables() + wxT(")");
+			}
 		}
 
-		if (GetConnection()->BackendMinimumVersion(8, 2))
+		if (GetIsNativePartitioned())
+			sql += wxT("\nPARTITION BY ") + GetPartitionKeyDef();
+
+		// Partitioned tables have no storage, so no storage parameters
+		if (GetIsNativePartitioned())
+		{
+		}
+		else if (GetConnection()->BackendMinimumVersion(8, 2))
 		{
 			sql += wxT("\nWITH (");
 			if (GetFillFactor().Length() > 0)
@@ -1029,7 +1045,12 @@ void pgTable::ShowTreeDetail(ctlTree *browser, frmMain *form, ctlListView *prope
 			properties->AppendItem(_("Inherited tables"), GetInheritedTables());
 		if (GetConnection()->BackendMinimumVersion(9, 1))
 			properties->AppendYesNoItem(_("Unlogged?"), GetUnlogged());
-		properties->AppendYesNoItem(_("Has OIDs?"), GetHasOids());
+		if (GetIsNativePartitioned())
+			properties->AppendItem(_("Partition key"), GetPartitionKeyDef());
+		if (GetIsNativePartition())
+			properties->AppendItem(_("Partition bound"), GetPartitionBound());
+		if (!GetConnection()->BackendMinimumVersion(12, 0))
+			properties->AppendYesNoItem(_("Has OIDs?"), GetHasOids());
 		properties->AppendYesNoItem(_("System table?"), GetSystemObject());
 
 		/* Custom AutoVacuum Settings */
@@ -1432,7 +1453,8 @@ pgObject *pgTableFactory::CreateObjects(pgCollection *collection, ctlTree *brows
 	pgSet *tables;
 	if (collection->GetConnection()->BackendMinimumVersion(8, 0))
 	{
-		query = wxT("SELECT rel.oid, rel.relname, rel.reltablespace AS spcoid, spc.spcname, pg_get_userbyid(rel.relowner) AS relowner, rel.relacl, rel.relhasoids, ")
+		query = wxT("SELECT rel.oid, rel.relname, rel.reltablespace AS spcoid, spc.spcname, pg_get_userbyid(rel.relowner) AS relowner, rel.relacl, ")
+		        + wxString(collection->GetConnection()->BackendMinimumVersion(12, 0) ? wxT("false AS relhasoids, ") : wxT("rel.relhasoids, ")) +
 		        wxT("rel.relhassubclass, rel.reltuples, des.description, con.conname, con.conkey,\n")
 		        wxT("       EXISTS(select 1 FROM pg_trigger\n")
 		        wxT("                       JOIN pg_proc pt ON pt.oid=tgfoid AND pt.proname='logtrigger'\n")
@@ -1452,6 +1474,9 @@ pgObject *pgTableFactory::CreateObjects(pgCollection *collection, ctlTree *brows
 
 		if (collection->GetConnection()->BackendMinimumVersion(9, 1))
 			query += wxT(", rel.relpersistence \n");
+		if (collection->GetConnection()->BackendMinimumVersion(10, 0))
+			query += wxT(", CASE WHEN rel.relkind = 'p' THEN pg_get_partkeydef(rel.oid) END AS partkeydef \n")
+			         wxT(", CASE WHEN rel.relispartition THEN pg_get_expr(rel.relpartbound, rel.oid) END AS partbound \n");
 		if (collection->GetConnection()->BackendMinimumVersion(8, 2))
 			query += wxT(", substring(array_to_string(rel.reloptions, ',') FROM 'fillfactor=([0-9]*)') AS fillfactor \n");
 		if (collection->GetConnection()->GetIsGreenplum())
@@ -1514,7 +1539,10 @@ pgObject *pgTableFactory::CreateObjects(pgCollection *collection, ctlTree *brows
 		if (collection->GetConnection()->BackendMinimumVersion(9, 0))
 			query += wxT("LEFT JOIN pg_type typ ON rel.reloftype=typ.oid\n");
 
-		query += wxT(" WHERE rel.relkind IN ('r','s','t') AND rel.relnamespace = ") + collection->GetSchema()->GetOidStr() + wxT("\n");
+		if (collection->GetConnection()->BackendMinimumVersion(10, 0))
+			query += wxT(" WHERE rel.relkind IN ('r','s','t','p') AND rel.relnamespace = ") + collection->GetSchema()->GetOidStr() + wxT("\n");
+		else
+			query += wxT(" WHERE rel.relkind IN ('r','s','t') AND rel.relnamespace = ") + collection->GetSchema()->GetOidStr() + wxT("\n");
 
 		// Greenplum: Eliminate (sub)partitions from the display, only show the parent partitioned table
 		// and eliminate external tables
@@ -1578,6 +1606,11 @@ pgObject *pgTableFactory::CreateObjects(pgCollection *collection, ctlTree *brows
 				table->iSetUnlogged(tables->GetVal(wxT("relpersistence")) == wxT("u"));
 			else
 				table->iSetUnlogged(false);
+			if (collection->GetConnection()->BackendMinimumVersion(10, 0))
+			{
+				table->iSetPartitionKeyDef(tables->GetVal(wxT("partkeydef")));
+				table->iSetPartitionBound(tables->GetVal(wxT("partbound")));
+			}
 			table->iSetHasOids(tables->GetBool(wxT("relhasoids")));
 			table->iSetEstimatedRows(tables->GetDouble(wxT("reltuples")) * gp_segments);
 			if (collection->GetConnection()->BackendMinimumVersion(8, 2))

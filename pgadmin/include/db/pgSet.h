@@ -148,7 +148,7 @@ protected:
 	wxMBConv &conv;
 	bool needColQuoting;
 	mutable wxArrayString colTypes, colFullTypes;
-	wxArrayInt colClasses;
+	mutable wxArrayInt colClasses;
 };
 
 

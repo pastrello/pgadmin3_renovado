@@ -873,8 +873,10 @@ int pgServer::Connect(frmMain *form, bool askPassword, const wxString &pwd, bool
 		}
 		else
 		{
+			// Since PostgreSQL 10 the second version number is the patch
+			// level, so only the major version is compared (13 .. 18).
 			if (!(conn->BackendMinimumVersion(SERVER_MIN_VERSION_N >> 8, SERVER_MIN_VERSION_N & 0x00FF)) ||
-			        (conn->BackendMinimumVersion(SERVER_MAX_VERSION_N >> 8, (SERVER_MAX_VERSION_N & 0x00FF) + 1)))
+			        (conn->BackendMinimumVersion((SERVER_MAX_VERSION_N >> 8) + 1, 0)))
 			{
 				wxLogWarning(_("The server you are connecting to is not a version that is supported by this release of %s.\n\n%s may not function as expected.\n\nSupported server versions are %s to %s."),
 				             appearanceFactory->GetLongAppName().c_str(),
@@ -905,13 +907,24 @@ int pgServer::Connect(frmMain *form, bool askPassword, const wxString &pwd, bool
 		if (conn->BackendMinimumVersion(8, 5))
 		{
 			sql += wxT(", CASE WHEN usesuper THEN pg_is_in_recovery() ELSE NULL END as inrecovery");
-			sql += wxT(", CASE WHEN usesuper THEN pg_last_xlog_receive_location() ELSE NULL END as receiveloc");
-			sql += wxT(", CASE WHEN usesuper THEN pg_last_xlog_replay_location() ELSE NULL END as replayloc");
+			if (conn->BackendMinimumVersion(10, 0))
+			{
+				sql += wxT(", CASE WHEN usesuper THEN pg_last_wal_receive_lsn() ELSE NULL END as receiveloc");
+				sql += wxT(", CASE WHEN usesuper THEN pg_last_wal_replay_lsn() ELSE NULL END as replayloc");
+			}
+			else
+			{
+				sql += wxT(", CASE WHEN usesuper THEN pg_last_xlog_receive_location() ELSE NULL END as receiveloc");
+				sql += wxT(", CASE WHEN usesuper THEN pg_last_xlog_replay_location() ELSE NULL END as replayloc");
+			}
 		}
 		if (conn->BackendMinimumVersion(9, 1))
 		{
 			sql += wxT(", CASE WHEN usesuper THEN pg_last_xact_replay_timestamp() ELSE NULL END as replay_timestamp");
-			sql += wxT(", CASE WHEN usesuper AND pg_is_in_recovery() THEN pg_is_xlog_replay_paused() ELSE NULL END as isreplaypaused");
+			if (conn->BackendMinimumVersion(10, 0))
+				sql += wxT(", CASE WHEN usesuper AND pg_is_in_recovery() THEN pg_is_wal_replay_paused() ELSE NULL END as isreplaypaused");
+			else
+				sql += wxT(", CASE WHEN usesuper AND pg_is_in_recovery() THEN pg_is_xlog_replay_paused() ELSE NULL END as isreplaypaused");
 		}
 
 		pgSet *set = ExecuteSet(sql + wxT("\n  FROM pg_user WHERE usename=current_user"));
@@ -1355,7 +1368,11 @@ void pgServer::ShowStatistics(frmMain *form, ctlListView *statistics)
 		wxString pidcol = GetConnection()->BackendMinimumVersion(9, 2) ? wxT("pid") : wxT("procpid");
 		wxString querycol = GetConnection()->BackendMinimumVersion(9, 2) ? wxT("query") : wxT("current_query");
 		wxString sql;
-		wxString replication_query = wxT("state || ' (' || sent_location || ' sent, ' || write_location || ' written, ' || flush_location || ' flushed, ' || replay_location || ' applied)'");
+		wxString replication_query;
+		if (GetConnection()->BackendMinimumVersion(10, 0))
+			replication_query = wxT("state || ' (' || sent_lsn || ' sent, ' || write_lsn || ' written, ' || flush_lsn || ' flushed, ' || replay_lsn || ' applied)'");
+		else
+			replication_query = wxT("state || ' (' || sent_location || ' sent, ' || write_location || ' written, ' || flush_location || ' flushed, ' || replay_location || ' applied)'");
 		wxLogInfo(wxT("Displaying statistics for server %s"), GetIdentifier().c_str());
 
 		// Add the statistics view columns
@@ -1434,7 +1451,7 @@ bool pgServer::ReloadConfiguration()
 bool pgServer::PauseReplay()
 {
 	SetReplayPaused(true);
-	wxString sql = wxT("SELECT pg_xlog_replay_pause()");
+	wxString sql = conn->BackendMinimumVersion(10, 0) ? wxT("SELECT pg_wal_replay_pause()") : wxT("SELECT pg_xlog_replay_pause()");
 	return conn->ExecuteVoid(sql);
 }
 
@@ -1442,7 +1459,7 @@ bool pgServer::PauseReplay()
 bool pgServer::ResumeReplay()
 {
 	SetReplayPaused(false);
-	wxString sql = wxT("SELECT pg_xlog_replay_resume()");
+	wxString sql = conn->BackendMinimumVersion(10, 0) ? wxT("SELECT pg_wal_replay_resume()") : wxT("SELECT pg_xlog_replay_resume()");
 	return conn->ExecuteVoid(sql);
 }
 

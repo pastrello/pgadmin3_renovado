@@ -284,8 +284,10 @@ int dlgTable::Go(bool modal)
 
 		btnAddTable->Enable(connection->BackendMinimumVersion(8, 2) && cbTables->GetGuessedSelection() >= 0);
 		lbTables->Enable(connection->BackendMinimumVersion(8, 2));
-		chkHasOids->Enable((connection->BackendMinimumVersion(8, 0) && table->GetHasOids())
-		                   || connection->BackendMinimumVersion(8, 4));
+		// Tables with OIDs no longer exist since PostgreSQL 12
+		chkHasOids->Enable(!connection->BackendMinimumVersion(12, 0) &&
+		                   ((connection->BackendMinimumVersion(8, 0) && table->GetHasOids())
+		                    || connection->BackendMinimumVersion(8, 4)));
 		cbSchema->Enable(connection->BackendMinimumVersion(8, 1));
 		cbTablespace->Enable(connection->BackendMinimumVersion(7, 5));
 
@@ -412,6 +414,13 @@ int dlgTable::Go(bool modal)
 	{
 		// create mode
 		btnChangeCol->Hide();
+
+		// Tables with OIDs no longer exist since PostgreSQL 12
+		if (connection->BackendMinimumVersion(12, 0))
+		{
+			chkHasOids->SetValue(false);
+			chkHasOids->Disable();
+		}
 
 		// Add the default tablespace
 		cbTablespace->Insert(_("<default tablespace>"), 0, (void *)0);

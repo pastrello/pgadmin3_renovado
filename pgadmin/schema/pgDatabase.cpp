@@ -462,6 +462,10 @@ bool pgDatabase::GetSystemObject() const
 	if (server)
 	{
 		if (this->GetName() == wxT("template0")) return true;
+		// Since PostgreSQL 15 the "postgres" database has a low fixed OID,
+		// so only the templates are treated as system databases there.
+		if (server->GetConnection() && server->GetConnection()->BackendMinimumVersion(15, 0))
+			return this->GetName() == wxT("template1");
 		return (this->GetOid() <= server->GetLastSystemOID());
 	}
 	else
@@ -1224,6 +1228,8 @@ void pgDatabaseCollection::ShowStatistics(frmMain *form, ctlListView *statistics
 		{
 			if (stats->GetVal(wxT("datname")) == wxT("template0"))
 				sysobj = true;
+			else if (GetServer()->GetConnection()->BackendMinimumVersion(15, 0))
+				sysobj = stats->GetVal(wxT("datname")) == wxT("template1");
 			else
 				sysobj = stats->GetOid(wxT("datid")) <= GetServer()->GetLastSystemOID();
 

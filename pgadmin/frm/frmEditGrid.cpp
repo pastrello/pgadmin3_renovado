@@ -1276,7 +1276,7 @@ void frmEditGrid::OnEditorHidden(wxGridEvent &event)
 
 void frmEditGrid::OnGridSelectCells(wxGridRangeSelectEvent &event)
 {
-	if (sqlGrid->GetEditable())
+	if (sqlGrid->IsEditable())
 	{
 		wxArrayInt rows = sqlGrid->GetSelectedRows();
 
@@ -2326,7 +2326,7 @@ sqlTable::sqlTable(pgConn *conn, pgQueryThread *_thread, const wxString &tabName
 
 	pgSet *colSet = connection->ExecuteSet(
 	                    wxT("SELECT n.nspname AS nspname, relname, format_type(t.oid,NULL) AS typname, format_type(t.oid, att.atttypmod) AS displaytypname, ")
-	                    wxT("nt.nspname AS typnspname, attname, attnum, COALESCE(b.oid, t.oid) AS basetype, atthasdef, adsrc,\n")
+	                    wxT("nt.nspname AS typnspname, attname, attnum, COALESCE(b.oid, t.oid) AS basetype, atthasdef, pg_get_expr(def.adbin, def.adrelid) AS adsrc,\n")
 	                    wxT("       CASE WHEN t.typbasetype::oid=0 THEN att.atttypmod else t.typtypmod END AS typmod,\n")
 	                    wxT("       CASE WHEN t.typbasetype::oid=0 THEN att.attlen else t.typlen END AS typlen\n")
 	                    wxT("  FROM pg_attribute att\n")

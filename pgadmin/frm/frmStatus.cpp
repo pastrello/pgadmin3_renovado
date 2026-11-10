@@ -1217,7 +1217,8 @@ void frmStatus::OnDefaultView(wxCommandEvent &event)
 
 void frmStatus::OnHighlightStatus(wxCommandEvent &event)
 {
-	wxTimerEvent evt;
+	wxTimer dummyTimer;
+	wxTimerEvent evt(dummyTimer);
 
 	OnRefreshStatusTimer(evt);
 }
@@ -1878,7 +1879,8 @@ void frmStatus::OnRefreshLogTimer(wxTimerEvent &event)
 
 void frmStatus::OnRefresh(wxCommandEvent &event)
 {
-	wxTimerEvent evt;
+	wxTimer dummyTimer;
+	wxTimerEvent evt(dummyTimer);
 
 	OnRefreshStatusTimer(evt);
 	OnRefreshLocksTimer(evt);
@@ -3049,7 +3051,8 @@ void frmStatus::OnSortStatusGrid(wxListEvent &event)
 		SetColumnImage(statusList, statusSortColumn - 1, 1);
 
 	// Refresh grid
-	wxTimerEvent evt;
+	wxTimer dummyTimer;
+	wxTimerEvent evt(dummyTimer);
 	OnRefreshStatusTimer(evt);
 }
 
@@ -3090,7 +3093,8 @@ void frmStatus::OnSortLockGrid(wxListEvent &event)
 		SetColumnImage(lockList, lockSortColumn - 1, 1);
 
 	// Refresh grid
-	wxTimerEvent evt;
+	wxTimer dummyTimer;
+	wxTimerEvent evt(dummyTimer);
 	OnRefreshLocksTimer(evt);
 }
 
@@ -3131,7 +3135,8 @@ void frmStatus::OnSortXactGrid(wxListEvent &event)
 		SetColumnImage(xactList, xactSortColumn - 1, 1);
 
 	// Refresh grid
-	wxTimerEvent evt;
+	wxTimer dummyTimer;
+	wxTimerEvent evt(dummyTimer);
 	OnRefreshXactTimer(evt);
 }
 
