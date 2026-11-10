@@ -29874,3 +29874,37 @@ msgstr "|"
 
 #~ msgid "worker thread waiting for some work to do..."
 #~ msgstr "thread esperando alguma trabalho a ser feito..."
+
+# pgAdmin III renovado: theme options
+msgid "Window theme"
+msgstr "Tema da janela"
+
+msgid "Follow Windows setting"
+msgstr "Seguir a configuração do Windows"
+
+msgid "Light"
+msgstr "Claro"
+
+msgid "Dark"
+msgstr "Escuro"
+
+msgid "SQL editor theme"
+msgstr "Tema do editor SQL"
+
+msgid "Automatic (follows the window theme)"
+msgstr "Automático (segue o tema da janela)"
+
+msgid "Classic (colours from the Query tool options)"
+msgstr "Clássico (cores das opções da ferramenta de consulta)"
+
+msgid "Modern light"
+msgstr "Moderno claro"
+
+msgid "Modern dark"
+msgstr "Moderno escuro"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "The new theme will be used after pgAdmin is restarted. SQL editors opened from now on already use the new editor theme."
+msgstr "O novo tema será usado após reiniciar o pgAdmin. Os editores SQL abertos a partir de agora já usam o novo tema do editor."
