@@ -34,3 +34,6 @@ tags
 
 # CMake build directory (Windows build, see BUILD-WINDOWS.md)
 /build/
+
+# Python bytecode
+__pycache__/
