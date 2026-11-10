@@ -28,6 +28,9 @@ public:
 	ctlTree(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition, const wxSize &size = wxDefaultSize, long style = wxTR_HAS_BUTTONS);
 	void SetItemImage(const wxTreeItemId &item, int image, wxTreeItemIcon which = wxTreeItemIcon_Normal);
 	wxTreeItemId AppendItem(const wxTreeItemId &parent, const wxString &text, int image = -1, int selImage = -1, wxTreeItemData *data = NULL);
+	// Paints an item with its server colour, keeping the text readable.
+	// An empty or white colour means "no colour" (theme default).
+	void SetServerColour(const wxTreeItemId &item, const wxString &colour);
 	wxTreeItemId AppendObject(pgObject *parent, pgObject *object);
 	void RemoveDummyChild(pgObject *obj);
 	pgCollection *AppendCollection(pgObject *parent, pgaFactory &factory);

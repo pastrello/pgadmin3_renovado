@@ -137,6 +137,9 @@ void ctlSQLBox::Create(wxWindow *parent, wxWindowID id, const wxPoint &pos, cons
 	StyleSetFont(34, fntSQLBox);
 	StyleSetFont(35, fntSQLBox);
 
+	// Modern colour themes (replace the classic colours set above)
+	ApplyTheme(fntSQLBox);
+
 	// SQL Lexer and keywords.
 	if (sqlKeywords.IsEmpty())
 		FillKeywords(sqlKeywords);
@@ -151,13 +154,21 @@ void ctlSQLBox::Create(wxWindow *parent, wxWindowID id, const wxPoint &pos, cons
 	SetMarginSensitive(2, true);           // this one needs to be mouse-aware
 	SetMarginWidth(2, 16);                 // set margin 2 16 px wide
 
-	MarkerDefine(wxSTC_MARKNUM_FOLDEREND,     wxSTC_MARK_BOXPLUSCONNECTED,  *wxWHITE, *wxBLACK);
-	MarkerDefine(wxSTC_MARKNUM_FOLDEROPENMID, wxSTC_MARK_BOXMINUSCONNECTED, *wxWHITE, *wxBLACK);
-	MarkerDefine(wxSTC_MARKNUM_FOLDERMIDTAIL, wxSTC_MARK_TCORNER,  *wxWHITE, *wxBLACK);
-	MarkerDefine(wxSTC_MARKNUM_FOLDERTAIL,    wxSTC_MARK_LCORNER,  *wxWHITE, *wxBLACK);
-	MarkerDefine(wxSTC_MARKNUM_FOLDERSUB,     wxSTC_MARK_VLINE,    *wxWHITE, *wxBLACK);
-	MarkerDefine(wxSTC_MARKNUM_FOLDER,        wxSTC_MARK_BOXPLUS,  *wxWHITE, *wxBLACK);
-	MarkerDefine(wxSTC_MARKNUM_FOLDEROPEN,    wxSTC_MARK_BOXMINUS, *wxWHITE, *wxBLACK);
+	// Folding markers: drawn in the margin colours of the active theme
+	wxColour foldFore = themeDark ? wxColour(0x1E, 0x1E, 0x1E) : *wxWHITE;
+	wxColour foldBack = themeDark ? wxColour(0x85, 0x85, 0x85) : (themeModern ? wxColour(0x8A, 0x8A, 0x8A) : *wxBLACK);
+	MarkerDefine(wxSTC_MARKNUM_FOLDEREND,     wxSTC_MARK_BOXPLUSCONNECTED,  foldFore, foldBack);
+	MarkerDefine(wxSTC_MARKNUM_FOLDEROPENMID, wxSTC_MARK_BOXMINUSCONNECTED, foldFore, foldBack);
+	MarkerDefine(wxSTC_MARKNUM_FOLDERMIDTAIL, wxSTC_MARK_TCORNER,  foldFore, foldBack);
+	MarkerDefine(wxSTC_MARKNUM_FOLDERTAIL,    wxSTC_MARK_LCORNER,  foldFore, foldBack);
+	MarkerDefine(wxSTC_MARKNUM_FOLDERSUB,     wxSTC_MARK_VLINE,    foldFore, foldBack);
+	MarkerDefine(wxSTC_MARKNUM_FOLDER,        wxSTC_MARK_BOXPLUS,  foldFore, foldBack);
+	MarkerDefine(wxSTC_MARKNUM_FOLDEROPEN,    wxSTC_MARK_BOXMINUS, foldFore, foldBack);
+	if (themeModern)
+	{
+		SetFoldMarginColour(true, themeDark ? wxColour(0x1E, 0x1E, 0x1E) : wxColour(0xF3, 0xF3, 0xF3));
+		SetFoldMarginHiColour(true, themeDark ? wxColour(0x1E, 0x1E, 0x1E) : wxColour(0xF3, 0xF3, 0xF3));
+	}
 
 	SetProperty(wxT("fold"), wxT("1"));
 	SetFoldFlags(16);
@@ -626,7 +637,7 @@ void ctlSQLBox::UpdateLineNumber()
 {
 	bool showlinenumber;
 
-	settings->Read(wxT("frmQuery/ShowLineNumber"), &showlinenumber, false);
+	settings->Read(wxT("frmQuery/ShowLineNumber"), &showlinenumber, true);
 	if (showlinenumber)
 	{
 		long int width = TextWidth(wxSTC_STYLE_LINENUMBER,
@@ -941,4 +952,92 @@ CharacterRange ctlSQLBox::RegexFindText(int minPos, int maxPos, const wxString &
 	}
 
 	return ft.chrgText;
+}
+
+
+// Modern colour themes for the SQL editor. Theme "classic" keeps the colours
+// configured under Options; the modern ones follow common editor palettes.
+void ctlSQLBox::ApplyTheme(const wxFont &font)
+{
+	extern sysSettings *settings;
+	int theme = settings->GetSQLTheme();
+
+	themeModern = (theme != 1);
+	themeDark = (theme == 3) || (theme == 0 && wxSystemSettings::GetAppearance().IsDark());
+
+	// The error indicator (set by the query tool) is a red squiggle
+	IndicatorSetStyle(0, wxSTC_INDIC_SQUIGGLE);
+	IndicatorSetForeground(0, themeDark ? wxColour(0xF1, 0x4C, 0x4C) : wxColour(0xE5, 0x14, 0x00));
+
+	if (!themeModern)
+		return;
+
+	struct Palette
+	{
+		wxColour back, fore, comment, number, keyword, string, op, quoted;
+		wxColour marginBack, marginFore, caret, caretLine, selection, brace, braceBad;
+	};
+	static const Palette light =
+	{
+		wxColour(0xFF, 0xFF, 0xFF), wxColour(0x1F, 0x1F, 0x1F), wxColour(0x00, 0x80, 0x00),
+		wxColour(0x09, 0x86, 0x58), wxColour(0x00, 0x00, 0xFF), wxColour(0xA3, 0x15, 0x15),
+		wxColour(0x1F, 0x1F, 0x1F), wxColour(0x00, 0x10, 0x80),
+		wxColour(0xF3, 0xF3, 0xF3), wxColour(0x8A, 0x8A, 0x8A), wxColour(0x00, 0x00, 0x00),
+		wxColour(0xF0, 0xF4, 0xFA), wxColour(0xAD, 0xD6, 0xFF), wxColour(0xC8, 0xE6, 0xC9),
+		wxColour(0xFF, 0xCD, 0xD2)
+	};
+	static const Palette dark =
+	{
+		wxColour(0x1E, 0x1E, 0x1E), wxColour(0xD4, 0xD4, 0xD4), wxColour(0x6A, 0x99, 0x55),
+		wxColour(0xB5, 0xCE, 0xA8), wxColour(0x56, 0x9C, 0xD6), wxColour(0xCE, 0x91, 0x78),
+		wxColour(0xD4, 0xD4, 0xD4), wxColour(0x9C, 0xDC, 0xFE),
+		wxColour(0x1E, 0x1E, 0x1E), wxColour(0x85, 0x85, 0x85), wxColour(0xAE, 0xAF, 0xAD),
+		wxColour(0x2A, 0x2D, 0x2E), wxColour(0x26, 0x4F, 0x78), wxColour(0x3A, 0x5A, 0x40),
+		wxColour(0x7A, 0x2E, 0x2E)
+	};
+	const Palette &p = themeDark ? dark : light;
+
+	StyleSetBackground(wxSTC_STYLE_DEFAULT, p.back);
+	StyleSetForeground(wxSTC_STYLE_DEFAULT, p.fore);
+	StyleSetFont(wxSTC_STYLE_DEFAULT, font);
+
+	for (int i = 0; i < 34; ++i)
+	{
+		StyleSetBackground(i, p.back);
+		StyleSetForeground(i, p.fore);
+		StyleSetFont(i, font);
+		StyleSetBold(i, false);
+		StyleSetItalic(i, false);
+	}
+	StyleSetForeground(wxSTC_SQL_COMMENT, p.comment);
+	StyleSetForeground(wxSTC_SQL_COMMENTLINE, p.comment);
+	StyleSetForeground(wxSTC_SQL_COMMENTDOC, p.comment);
+	StyleSetForeground(wxSTC_SQL_COMMENTLINEDOC, p.comment);
+	StyleSetItalic(wxSTC_SQL_COMMENT, true);
+	StyleSetItalic(wxSTC_SQL_COMMENTLINE, true);
+	StyleSetForeground(wxSTC_SQL_NUMBER, p.number);
+	StyleSetForeground(wxSTC_SQL_WORD, p.keyword);
+	StyleSetBold(wxSTC_SQL_WORD, true);
+	StyleSetForeground(wxSTC_SQL_WORD2, p.keyword);
+	StyleSetForeground(wxSTC_SQL_STRING, p.string);
+	StyleSetForeground(wxSTC_SQL_CHARACTER, p.string);
+	StyleSetForeground(wxSTC_SQL_OPERATOR, p.op);
+	StyleSetForeground(wxSTC_SQL_QUOTEDIDENTIFIER, p.quoted);
+
+	// Line numbers, caret, current line and selection
+	StyleSetBackground(wxSTC_STYLE_LINENUMBER, p.marginBack);
+	StyleSetForeground(wxSTC_STYLE_LINENUMBER, p.marginFore);
+	SetCaretForeground(p.caret);
+	SetCaretLineVisible(true);
+	SetCaretLineBackground(p.caretLine);
+	SetSelBackground(true, p.selection);
+	SetSelForeground(false, p.fore);
+	SetWhitespaceForeground(true, p.marginFore);
+
+	// Brace matching
+	StyleSetBackground(wxSTC_STYLE_BRACELIGHT, p.brace);
+	StyleSetForeground(wxSTC_STYLE_BRACELIGHT, p.fore);
+	StyleSetBold(wxSTC_STYLE_BRACELIGHT, true);
+	StyleSetBackground(wxSTC_STYLE_BRACEBAD, p.braceBad);
+	StyleSetForeground(wxSTC_STYLE_BRACEBAD, p.fore);
 }

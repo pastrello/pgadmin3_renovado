@@ -44,7 +44,7 @@ dlgPackage::dlgPackage(pgaFactory *f, frmMain *frame, edbPackage *node, pgSchema
 	package = node;
 
 	bool bVal;
-	settings->Read(wxT("frmQuery/ShowLineNumber"), &bVal, false);
+	settings->Read(wxT("frmQuery/ShowLineNumber"), &bVal, true);
 	if (!bVal)
 	{
 		txtHeader->SetMarginType(1, wxSTC_MARGIN_NUMBER);

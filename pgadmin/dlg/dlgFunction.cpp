@@ -147,7 +147,7 @@ dlgFunction::dlgFunction(pgaFactory *f, frmMain *frame, pgFunction *node, pgSche
 	}
 
 	bool bVal;
-	settings->Read(wxT("frmQuery/ShowLineNumber"), &bVal, false);
+	settings->Read(wxT("frmQuery/ShowLineNumber"), &bVal, true);
 	if (!bVal)
 	{
 		txtSqlBox->SetMarginType(1, wxSTC_MARGIN_NUMBER);

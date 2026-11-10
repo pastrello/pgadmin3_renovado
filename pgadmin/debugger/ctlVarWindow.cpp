@@ -122,7 +122,7 @@ void ctlVarWindow::AddVar(wxString name, wxString value, wxString type, bool rea
 		cell->second.m_value = value;
 
 		if (GetCellValue(cell->second.m_row, COL_VALUE).IsSameAs(value))
-			SetCellTextColour(cell->second.m_row, COL_VALUE, *wxBLACK);
+			SetCellTextColour(cell->second.m_row, COL_VALUE, wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
 		else
 			SetCellTextColour(cell->second.m_row, COL_VALUE, *wxRED);
 

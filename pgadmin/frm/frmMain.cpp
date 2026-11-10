@@ -1387,7 +1387,7 @@ void frmMain::SetItemBackgroundColour(wxTreeItemId item, wxColour colour)
 {
 	wxTreeItemIdValue cookie;
 
-	browser->SetItemBackgroundColour(item, wxColour(colour));
+	browser->SetServerColour(item, colour.IsOk() ? colour.GetAsString(wxC2S_HTML_SYNTAX) : wxString());
 	if (browser->ItemHasChildren(item))
 	{
 		wxTreeItemId childitem = browser->GetFirstChild(item, cookie);

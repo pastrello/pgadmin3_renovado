@@ -93,6 +93,12 @@ target_compile_definitions(pgAdmin3 PRIVATE
 
 if(MSVC)
   target_compile_options(pgAdmin3 PRIVATE /MP /W3 /utf-8 /permissive /Zc:wchar_t)
+  # Embed wxWidgets' manifest (common controls v6 = modern Windows look, and
+  # per-monitor v2 DPI awareness = sharp rendering at 125%/150%/200%) instead
+  # of the linker's default one.
+  set_source_files_properties(${PGA_DIR}/pgAdmin3.rc PROPERTIES
+    COMPILE_DEFINITIONS "wxUSE_RC_MANIFEST=1;wxUSE_DPI_AWARE_MANIFEST=2")
+  target_link_options(pgAdmin3 PRIVATE /MANIFEST:NO)
 endif()
 
 target_link_libraries(pgAdmin3 PRIVATE

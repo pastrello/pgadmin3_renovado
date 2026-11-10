@@ -218,6 +218,28 @@ pgCollection *ctlTree::GetParentCollection(wxTreeItemId id)
 }
 
 
+void ctlTree::SetServerColour(const wxTreeItemId &item, const wxString &colour)
+{
+	wxColour back(colour);
+	if (colour.IsEmpty() || !back.IsOk() || back == *wxWHITE)
+	{
+		// No server colour: use the theme colours (white was the old default).
+		// Only reset an item that was coloured before: giving an item an
+		// attribute at all makes the MSW tree paint it with the classic
+		// (light) window colour, even in dark mode.
+		if (GetItemBackgroundColour(item).IsOk())
+		{
+			SetItemBackgroundColour(item, wxNullColour);
+			SetItemTextColour(item, wxNullColour);
+		}
+		return;
+	}
+	SetItemBackgroundColour(item, back);
+	// Black or white text, whichever contrasts better with the colour
+	double luma = 0.299 * back.Red() + 0.587 * back.Green() + 0.114 * back.Blue();
+	SetItemTextColour(item, luma > 140 ? *wxBLACK : *wxWHITE);
+}
+
 void ctlTree::SetItemImage(const wxTreeItemId &item, int image, wxTreeItemIcon which)
 {
 	wxTreeCtrl::SetItemImage(item, image, which);
@@ -229,13 +251,11 @@ void ctlTree::SetItemImage(const wxTreeItemId &item, int image, wxTreeItemIcon w
 	{
 		if (((pgObject *)data)->GetMetaType() == PGM_SERVER)
 		{
-			if (!((pgServer *)data)->GetColour().IsEmpty())
-				SetItemBackgroundColour(item, wxColour(((pgServer *)data)->GetColour()));
+			SetServerColour(item, ((pgServer *)data)->GetColour());
 		}
 		else if (((pgObject *)data)->GetServer())
 		{
-			if (!((pgObject *)data)->GetServer()->GetColour().IsEmpty())
-				SetItemBackgroundColour(item, wxColour(((pgObject *)data)->GetServer()->GetColour()));
+			SetServerColour(item, ((pgObject *)data)->GetServer()->GetColour());
 		}
 	}
 }
@@ -249,13 +269,11 @@ wxTreeItemId ctlTree::AppendItem(const wxTreeItemId &parent, const wxString &tex
 	{
 		if (((pgObject *)data)->GetMetaType() == PGM_SERVER)
 		{
-			if (!((pgServer *)data)->GetColour().IsEmpty())
-				SetItemBackgroundColour(itm, wxColour(((pgServer *)data)->GetColour()));
+			SetServerColour(itm, ((pgServer *)data)->GetColour());
 		}
 		else if (((pgObject *)data)->GetServer())
 		{
-			if (!((pgObject *)data)->GetServer()->GetColour().IsEmpty())
-				SetItemBackgroundColour(itm, wxColour(((pgObject *)data)->GetServer()->GetColour()));
+			SetServerColour(itm, ((pgObject *)data)->GetServer()->GetColour());
 		}
 	}
 

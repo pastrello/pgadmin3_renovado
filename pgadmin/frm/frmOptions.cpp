@@ -93,6 +93,8 @@
 #define chkDoubleClickProperties    CTRL_CHECKBOX("chkDoubleClickProperties")
 #define chkShowNotices			    CTRL_CHECKBOX("chkShowNotices")
 #define cbLanguage                  CTRL_COMBOBOX("cbLanguage")
+#define cbAppearance                CTRL_COMBOBOX("cbAppearance")
+#define cbSQLTheme                  CTRL_COMBOBOX("cbSQLTheme")
 #define pickerSqlFont               CTRL_FONTPICKER("pickerSqlFont")
 #define chkSuppressHints            CTRL_CHECKBOX("chkSuppressHints")
 #define chkResetHints               CTRL_CHECKBOX("chkResetHints")
@@ -375,6 +377,9 @@ frmOptions::frmOptions(frmMain *parent)
 		}
 	}
 	cbLanguage->SetSelection(sel);
+
+	cbAppearance->SetSelection(settings->GetAppearance());
+	cbSQLTheme->SetSelection(settings->GetSQLTheme());
 
 	pickerFont->SetSelectedFont(settings->GetSystemFont());
 	pickerSqlFont->SetSelectedFont(settings->GetSQLFont());
@@ -860,6 +865,19 @@ void frmOptions::OnOK(wxCommandEvent &ev)
 		settings->SetSQLKeywordsInUppercase(chkKeywordsInUppercase->GetValue());
 	}
 
+	// Window and SQL editor themes (applied when windows are created)
+	bool themeChanged = false;
+	if (cbAppearance->GetSelection() >= 0 && cbAppearance->GetSelection() != settings->GetAppearance())
+	{
+		settings->SetAppearance(cbAppearance->GetSelection());
+		themeChanged = true;
+	}
+	if (cbSQLTheme->GetSelection() >= 0 && cbSQLTheme->GetSelection() != settings->GetSQLTheme())
+	{
+		settings->SetSQLTheme(cbSQLTheme->GetSelection());
+		themeChanged = true;
+	}
+
 	// Change the language last, as it will affect our tests for changes
 	// in the display object types.
 	int langNo = cbLanguage->GetCurrentSelection();
@@ -883,6 +901,8 @@ void frmOptions::OnOK(wxCommandEvent &ev)
 	// in the selected language.
 	if (changed)
 		wxMessageBox(_("Changes to the display options may not be visible until the browser tree is refreshed."), _("Display options"), wxICON_INFORMATION | wxOK);
+	if (themeChanged)
+		wxMessageBox(_("The new theme will be used after pgAdmin is restarted. SQL editors opened from now on already use the new editor theme."), _("Theme"), wxICON_INFORMATION | wxOK);
 
 	Destroy();
 }

@@ -1508,7 +1508,7 @@ void frmStatus::OnRefreshStatusTimer(wxTimerEvent &event)
 						                                    wxColour(settings->GetSlowProcessColour()));
 				}
 				else
-					statusList->SetItemBackgroundColour(row, *wxWHITE);
+					statusList->SetItemBackgroundColour(row, wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOX));
 
 				row++;
 			}

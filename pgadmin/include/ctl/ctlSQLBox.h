@@ -69,6 +69,8 @@ public:
 	}
 	bool BlockComment(bool uncomment = false);
 	void UpdateLineNumber();
+	// Applies the SQL editor colour theme chosen in the options
+	void ApplyTheme(const wxFont &font);
 	wxString ExternalFormat();
 	void AbortProcess();
 
@@ -104,6 +106,7 @@ private:
 	dlgFindReplace *m_dlgFindReplace;
 	pgConn *m_database;
 	bool m_autoIndent, m_autocompDisabled;
+	bool themeModern = false, themeDark = false;
 
 	// Variables to track info per SQL box
 	wxString m_filename;

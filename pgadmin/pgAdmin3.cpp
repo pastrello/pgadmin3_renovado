@@ -222,6 +222,9 @@ bool pgAdmin3::OnInit()
 	// Setup additional helper paths etc. Requires settings!
 	InitXtraPaths();
 
+	// Window theme (must be set before any window is created)
+	ApplyAppearance(settings->GetAppearance());
+
 	locale = new wxLocale();
 	locale->AddCatalogLookupPathPrefix(i18nPath);
 
@@ -1724,6 +1727,21 @@ wxString pgAdmin3::GenerateHelpPath(const wxString &file, const wxString &curren
 		return dbmsPaths.FindValidPath(file);
 
 	return wxEmptyString;
+}
+
+// appearance: 0 = follow the system, 1 = always light, 2 = always dark
+void pgAdmin3::ApplyAppearance(int appearance)
+{
+#ifdef __WXMSW__
+	if (appearance == 0)
+		MSWEnableDarkMode(DarkMode_Auto);
+	else if (appearance == 2)
+		MSWEnableDarkMode(DarkMode_Always);
+	// light: nothing to do, it is the Windows default for desktop apps
+#else
+	SetAppearance(appearance == 2 ? Appearance::Dark :
+	              appearance == 1 ? Appearance::Light : Appearance::System);
+#endif
 }
 
 void pgAdmin3::InitXml()

@@ -323,6 +323,33 @@ public:
 		WriteBool(wxT("ShowSystemObjects"), newval);
 	}
 
+	// Window theme: 0 = follow the system, 1 = light, 2 = dark.
+	// Applied at start-up only.
+	int GetAppearance() const
+	{
+		int i;
+		Read(wxT("Appearance"), &i, 0);
+		return (i < 0 || i > 2) ? 0 : i;
+	}
+	void SetAppearance(const int newval)
+	{
+		WriteInt(wxT("Appearance"), newval);
+	}
+
+	// SQL editor colour theme: 0 = automatic (modern light or dark, following
+	// the window theme), 1 = classic (the colours set under Options),
+	// 2 = modern light, 3 = modern dark.
+	int GetSQLTheme() const
+	{
+		int i;
+		Read(wxT("frmQuery/Theme"), &i, 0);
+		return (i < 0 || i > 3) ? 0 : i;
+	}
+	void SetSQLTheme(const int newval)
+	{
+		WriteInt(wxT("frmQuery/Theme"), newval);
+	}
+
 	// Editor options
 	bool GetSpacesForTabs() const
 	{

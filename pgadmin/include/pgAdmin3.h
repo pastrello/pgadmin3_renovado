@@ -185,6 +185,7 @@ protected:
 	void InitLogger();
 	void InitNetwork();
 	void InitXml();
+	void ApplyAppearance(int appearance);
 
 #ifdef __WXMSW__
 	void InitLibpq();

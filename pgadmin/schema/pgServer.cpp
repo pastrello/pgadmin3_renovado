@@ -1672,8 +1672,7 @@ pgObject *pgServerFactory::CreateObjects(pgCollection *obj, ctlTree *browser, co
 
 		serveritem = browser->AppendItem(groupitem, server->GetFullName(), server->GetIconId(), -1, server);
 		browser->SortChildren(groupitem);
-		if (!server->GetColour().IsEmpty())
-			browser->SetItemBackgroundColour(serveritem, wxColour(server->GetColour()));
+		browser->SetServerColour(serveritem, server->GetColour());
 
 		// Note if we're reloading a discovered server
 		if (!discoveryID.IsEmpty())

@@ -173,8 +173,8 @@ void dlgDirectDbg::PopulateParamGrid()
 				}
 				else
 				{
-					grdParams->SetCellBackgroundColour(idx, COL_EXPR, wxColour(235, 235, 235, 90));
-					grdParams->SetCellBackgroundColour(idx, COL_VALUE, wxColour(235, 235, 235, 90));
+					grdParams->SetCellBackgroundColour(idx, COL_EXPR, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+					grdParams->SetCellBackgroundColour(idx, COL_VALUE, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 				}
 
 				// Use the default value?
@@ -190,9 +190,9 @@ void dlgDirectDbg::PopulateParamGrid()
 				grdParams->SetRowLabelValue(idx + 1, wxT("+"));
 				grdParams->SetCellValue(idx + 1, COL_NAME, _("Click '+/-' to add/remove value to variadic"));
 
-				grdParams->SetCellBackgroundColour(idx + 1, COL_EXPR,    wxColour(235, 235, 235, 90));
-				grdParams->SetCellBackgroundColour(idx + 1, COL_VALUE,   wxColour(235, 235, 235, 90));
-				grdParams->SetCellBackgroundColour(idx + 1, COL_USE_DEF, wxColour(235, 235, 235, 90));
+				grdParams->SetCellBackgroundColour(idx + 1, COL_EXPR,    wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+				grdParams->SetCellBackgroundColour(idx + 1, COL_VALUE,   wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+				grdParams->SetCellBackgroundColour(idx + 1, COL_USE_DEF, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 			}
 
 			// Set value to NULL?
@@ -223,11 +223,11 @@ void dlgDirectDbg::PopulateParamGrid()
 				grdParams->SetReadOnly(idx, COL_VALUE, arg->IsArray());
 				grdParams->SetReadOnly(idx, COL_EXPR, arg->IsArray());
 
-				grdParams->SetCellBackgroundColour(idx, COL_USE_DEF, wxColour(235, 235, 235, 90));
+				grdParams->SetCellBackgroundColour(idx, COL_USE_DEF, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 				if (arg->IsArray())
 				{
-					grdParams->SetCellBackgroundColour(idx, COL_VALUE, wxColour(235, 235, 235, 90));
-					grdParams->SetCellBackgroundColour(idx, COL_EXPR, wxColour(235, 235, 235, 90));
+					grdParams->SetCellBackgroundColour(idx, COL_VALUE, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+					grdParams->SetCellBackgroundColour(idx, COL_EXPR, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 				}
 			}
 
@@ -235,9 +235,9 @@ void dlgDirectDbg::PopulateParamGrid()
 			grdParams->SetReadOnly(idx, COL_NAME, true);
 			grdParams->SetReadOnly(idx, COL_TYPE, true);
 			grdParams->SetReadOnly(idx, COL_DEF_VAL, true);
-			grdParams->SetCellBackgroundColour(idx, COL_NAME,    wxColour(235, 235, 235, 90));
-			grdParams->SetCellBackgroundColour(idx, COL_TYPE,    wxColour(235, 235, 235, 90));
-			grdParams->SetCellBackgroundColour(idx, COL_DEF_VAL, wxColour(235, 235, 235, 90));
+			grdParams->SetCellBackgroundColour(idx, COL_NAME,    wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+			grdParams->SetCellBackgroundColour(idx, COL_TYPE,    wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+			grdParams->SetCellBackgroundColour(idx, COL_DEF_VAL, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 
 			idx++;
 
@@ -257,13 +257,13 @@ void dlgDirectDbg::PopulateParamGrid()
 				grdParams->SetReadOnly(idx, COL_USE_DEF, true);
 				grdParams->SetReadOnly(idx, COL_DEF_VAL, true);
 
-				grdParams->SetCellBackgroundColour(idx, COL_NAME,    wxColour(235, 235, 235, 90));
-				grdParams->SetCellBackgroundColour(idx, COL_TYPE,    wxColour(235, 235, 235, 90));
-				grdParams->SetCellBackgroundColour(idx, COL_NULL,    wxColour(235, 235, 235, 90));
-				grdParams->SetCellBackgroundColour(idx, COL_EXPR,    wxColour(235, 235, 235, 90));
-				grdParams->SetCellBackgroundColour(idx, COL_VALUE,   wxColour(235, 235, 235, 90));
-				grdParams->SetCellBackgroundColour(idx, COL_USE_DEF, wxColour(235, 235, 235, 90));
-				grdParams->SetCellBackgroundColour(idx, COL_DEF_VAL, wxColour(235, 235, 235, 90));
+				grdParams->SetCellBackgroundColour(idx, COL_NAME,    wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+				grdParams->SetCellBackgroundColour(idx, COL_TYPE,    wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+				grdParams->SetCellBackgroundColour(idx, COL_NULL,    wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+				grdParams->SetCellBackgroundColour(idx, COL_EXPR,    wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+				grdParams->SetCellBackgroundColour(idx, COL_VALUE,   wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+				grdParams->SetCellBackgroundColour(idx, COL_USE_DEF, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+				grdParams->SetCellBackgroundColour(idx, COL_DEF_VAL, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 
 				idx++;
 			}
@@ -416,8 +416,8 @@ void dlgDirectDbg::LoadSettings()
 						grdParams->SetReadOnly(row, COL_EXPR, true);
 						grdParams->SetReadOnly(row, COL_VALUE, true);
 
-						grdParams->SetCellBackgroundColour(row, COL_EXPR,  wxColour(235, 235, 235, 90));
-						grdParams->SetCellBackgroundColour(row, COL_VALUE, wxColour(235, 235, 235, 90));
+						grdParams->SetCellBackgroundColour(row, COL_EXPR,  wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+						grdParams->SetCellBackgroundColour(row, COL_VALUE, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 
 						grdParams->SetRowLabelValue(
 						    row, wxString::Format(wxT("%d"), cnt + 1));
@@ -447,10 +447,10 @@ void dlgDirectDbg::LoadSettings()
 					grdParams->SetReadOnly(arrRow, COL_EXPR, false);
 					grdParams->SetReadOnly(arrRow, COL_VALUE, false);
 
-					grdParams->SetCellBackgroundColour(arrRow, COL_NAME,    wxColour(235, 235, 235, 90));
-					grdParams->SetCellBackgroundColour(arrRow, COL_TYPE,    wxColour(235, 235, 235, 90));
-					grdParams->SetCellBackgroundColour(arrRow, COL_USE_DEF, wxColour(235, 235, 235, 90));
-					grdParams->SetCellBackgroundColour(arrRow, COL_DEF_VAL, wxColour(235, 235, 235, 90));
+					grdParams->SetCellBackgroundColour(arrRow, COL_NAME,    wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+					grdParams->SetCellBackgroundColour(arrRow, COL_TYPE,    wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+					grdParams->SetCellBackgroundColour(arrRow, COL_USE_DEF, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+					grdParams->SetCellBackgroundColour(arrRow, COL_DEF_VAL, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 
 					grdParams->SetReadOnly(arrRow + 1, COL_NAME,    true);
 					grdParams->SetReadOnly(arrRow + 1, COL_TYPE,    true);
@@ -460,15 +460,15 @@ void dlgDirectDbg::LoadSettings()
 					grdParams->SetReadOnly(arrRow + 1, COL_USE_DEF, true);
 					grdParams->SetReadOnly(arrRow + 1, COL_DEF_VAL, true);
 
-					grdParams->SetCellBackgroundColour(arrRow + 1, COL_NAME, wxColour(235, 235, 235, 90));
-					grdParams->SetCellBackgroundColour(arrRow + 1, COL_TYPE, wxColour(235, 235, 235, 90));
-					grdParams->SetCellBackgroundColour(arrRow + 1, COL_NULL, wxColour(235, 235, 235, 90));
-					grdParams->SetCellBackgroundColour(arrRow + 1, COL_EXPR, wxColour(235, 235, 235, 90));
-					grdParams->SetCellBackgroundColour(arrRow + 1, COL_VALUE, wxColour(235, 235, 235, 90));
+					grdParams->SetCellBackgroundColour(arrRow + 1, COL_NAME, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+					grdParams->SetCellBackgroundColour(arrRow + 1, COL_TYPE, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+					grdParams->SetCellBackgroundColour(arrRow + 1, COL_NULL, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+					grdParams->SetCellBackgroundColour(arrRow + 1, COL_EXPR, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+					grdParams->SetCellBackgroundColour(arrRow + 1, COL_VALUE, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 					grdParams->SetCellBackgroundColour(arrRow + 1, COL_USE_DEF,
-					                                   wxColour(235, 235, 235, 90));
+					                                   wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 					grdParams->SetCellBackgroundColour(arrRow + 1, COL_DEF_VAL,
-					                                   wxColour(235, 235, 235, 90));
+					                                   wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 
 					grdParams->SetRowLabelValue(arrRow + 1, wxT("+"));
 				}
@@ -570,10 +570,10 @@ void dlgDirectDbg::OnClickGridLabel(wxGridEvent &_ev)
 		grdParams->SetRowLabelValue(row, wxT("-"));
 
 		grdParams->SetCellValue(row, COL_TYPE, arg->GetBaseType());
-		grdParams->SetCellBackgroundColour(row, COL_TYPE, wxColour(235, 235, 235, 90));
-		grdParams->SetCellBackgroundColour(row, COL_NAME, wxColour(235, 235, 235, 90));
-		grdParams->SetCellBackgroundColour(row, COL_USE_DEF, wxColour(235, 235, 235, 90));
-		grdParams->SetCellBackgroundColour(row, COL_DEF_VAL, wxColour(235, 235, 235, 90));
+		grdParams->SetCellBackgroundColour(row, COL_TYPE, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+		grdParams->SetCellBackgroundColour(row, COL_NAME, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+		grdParams->SetCellBackgroundColour(row, COL_USE_DEF, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+		grdParams->SetCellBackgroundColour(row, COL_DEF_VAL, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 
 		// Is the value an expression?
 		grdParams->SetCellEditor(row, COL_EXPR, new ctlGridCellBoolEditor());

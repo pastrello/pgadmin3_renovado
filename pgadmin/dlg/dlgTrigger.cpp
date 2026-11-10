@@ -79,7 +79,7 @@ dlgTrigger::dlgTrigger(pgaFactory *f, frmMain *frame, pgTrigger *node, pgTable *
 	         || table->GetMetaType() == GP_PARTITION);
 
 	bool bVal;
-	settings->Read(wxT("frmQuery/ShowLineNumber"), &bVal, false);
+	settings->Read(wxT("frmQuery/ShowLineNumber"), &bVal, true);
 	if (!bVal)
 	{
 		txtBody->SetMarginType(1, wxSTC_MARGIN_NUMBER);

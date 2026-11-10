@@ -613,7 +613,7 @@ frmQuery::frmQuery(frmMain *form, const wxString &_title, pgConn *_conn, const w
 	viewMenu->Check(MNU_SHOWLINEENDS, bVal);
 
 	// Line number
-	settings->Read(wxT("frmQuery/ShowLineNumber"), &bVal, false);
+	settings->Read(wxT("frmQuery/ShowLineNumber"), &bVal, true);
 	viewMenu->Check(MNU_SHOWLINENUMBER, bVal);
 
 	// Create the SQL box. After this, sqlQuery variable can be used.

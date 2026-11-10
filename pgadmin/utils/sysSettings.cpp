@@ -25,6 +25,7 @@
 #include <wx/wfstream.h>
 #include <wx/filename.h>
 #include <wx/dir.h>
+#include <wx/fontenum.h>
 // App headers
 #include "utils/sysSettings.h"
 #include "utils/sysLogger.h"
@@ -675,7 +676,14 @@ wxFont sysSettings::GetSQLFont()
 	if (fontName.IsEmpty())
 	{
 #ifdef __WXMSW__
-		return wxFont(9, wxTELETYPE, wxNORMAL, wxNORMAL);
+		// Modern monospaced fonts shipped with Windows; Courier New as last resort
+		const wxChar *faces[] = { wxT("Cascadia Mono"), wxT("Consolas") };
+		for (size_t i = 0; i < WXSIZEOF(faces); i++)
+		{
+			if (wxFontEnumerator::IsValidFacename(faces[i]))
+				return wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, faces[i]);
+		}
+		return wxFont(10, wxTELETYPE, wxNORMAL, wxNORMAL);
 #else
 #ifdef __WXGTK__
 		return wxFont(10, wxTELETYPE, wxNORMAL, wxNORMAL);
