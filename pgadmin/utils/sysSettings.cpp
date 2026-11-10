@@ -641,6 +641,16 @@ void sysSettings::SetExportRowSeparator(const wxString &s)
 // System Font
 //////////////////////////////////////////////////////////////////////////
 
+// Default interface font: the Windows icon title font (Segoe UI), at least
+// 10 points, slightly larger than the 9 point Windows default.
+static wxFont DefaultSystemFont()
+{
+	wxFont font = wxSystemSettings::GetFont(wxSYS_ICONTITLE_FONT);
+	if (font.GetFractionalPointSize() < 10)
+		font.SetPointSize(10);
+	return font;
+}
+
 wxFont sysSettings::GetSystemFont()
 {
 	wxString fontName;
@@ -648,7 +658,7 @@ wxFont sysSettings::GetSystemFont()
 	Read(wxT("Font"), &fontName, wxEmptyString);
 
 	if (fontName.IsEmpty())
-		return wxSystemSettings::GetFont(wxSYS_ICONTITLE_FONT);
+		return DefaultSystemFont();
 	else
 		return wxFont(fontName);
 }
@@ -657,7 +667,7 @@ void sysSettings::SetSystemFont(const wxFont &font)
 {
 	wxString fontName = font.GetNativeFontInfoDesc();
 
-	if (fontName == wxSystemSettings::GetFont(wxSYS_ICONTITLE_FONT).GetNativeFontInfoDesc())
+	if (fontName == DefaultSystemFont().GetNativeFontInfoDesc())
 		Write(wxT("Font"), wxString(wxEmptyString));
 	else
 		Write(wxT("Font"), fontName);

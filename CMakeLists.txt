@@ -45,11 +45,18 @@ file(GLOB PGA_PNGS ${PGA_DIR}/include/images/*.png)
 set(PGA_PNGCS)
 foreach(png IN LISTS PGA_PNGS)
   get_filename_component(name ${png} NAME)
+  get_filename_component(base ${png} NAME_WE)
   set(out ${GEN_DIR}/images/${name}c)
+  # A modern vector version in images/svg/ (see xtra/build-icons.py) replaces
+  # the PNG; png2c generates the same accessors for both.
+  set(src ${png})
+  if(EXISTS ${PGA_DIR}/include/images/svg/${base}.svg)
+    set(src ${PGA_DIR}/include/images/svg/${base}.svg)
+  endif()
   add_custom_command(OUTPUT ${out}
                      COMMAND ${CMAKE_COMMAND} -E make_directory ${GEN_DIR}/images
-                     COMMAND png2c ${png} ${out}
-                     DEPENDS png2c ${png}
+                     COMMAND png2c ${src} ${out}
+                     DEPENDS png2c ${src}
                      VERBATIM)
   list(APPEND PGA_PNGCS ${out})
 endforeach()
