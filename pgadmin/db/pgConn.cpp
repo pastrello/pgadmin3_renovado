@@ -145,6 +145,19 @@ pgConn::pgConn(const wxString &server, const wxString &service, const wxString &
 			case 6:
 				connstr.Append(wxT(" sslmode=verify-full"));
 				break;
+			default:
+				// No mode chosen: libpq would use "prefer", which a man in the
+				// middle can downgrade to an unencrypted connection. Require
+				// SSL for remote servers; keep "prefer" for local ones, as the
+				// PostgreSQL Windows installer ships with SSL disabled.
+				if (service.IsEmpty())
+				{
+					wxString h = server.Lower();
+					bool local = h.IsEmpty() || h == wxT("localhost") || h == wxT("127.0.0.1") ||
+					             h == wxT("::1") || h.StartsWith(wxT("/"));
+					connstr.Append(local ? wxT(" sslmode=prefer") : wxT(" sslmode=require"));
+				}
+				break;
 		}
 	}
 	else
@@ -404,7 +417,13 @@ wxString pgConn::GetSslModeName()
 		case 6:
 			return wxT("verify-full");
 		default:
-			return wxT("prefer");
+		{
+			// Same default as the connection string (see the constructor)
+			wxString h = GetHostName().Lower();
+			bool local = h.IsEmpty() || h == wxT("localhost") || h == wxT("127.0.0.1") ||
+			             h == wxT("::1") || h.StartsWith(wxT("/"));
+			return local ? wxT("prefer") : wxT("require");
+		}
 	}
 }
 
@@ -593,7 +612,21 @@ wxString pgConn::EncryptPassword(const wxString &user, const wxString &password)
 	char *chrPassword;
 	wxString strPassword;
 
-	chrPassword = PQencryptPassword(password.mb_str(*conv), user.mb_str(*conv));
+	// Let libpq hash the password the way the server wants it
+	// (password_encryption, normally scram-sha-256). The old client-side
+	// MD5 (PQencryptPassword) is deprecated since PostgreSQL 18 and an MD5
+	// hash is enough to log in as the role.
+	chrPassword = PQencryptPasswordConn(conn, password.mb_str(*conv), user.mb_str(*conv), NULL);
+	if (!chrPassword)
+	{
+		// e.g. password_encryption could not be read: never fall back to MD5
+		chrPassword = PQencryptPasswordConn(conn, password.mb_str(*conv), user.mb_str(*conv), "scram-sha-256");
+	}
+	if (!chrPassword)
+	{
+		wxLogError(_("Could not encrypt the password: %s"), wxString(PQerrorMessage(conn), *conv).c_str());
+		return wxEmptyString;
+	}
 	strPassword = wxString::FromAscii(chrPassword);
 
 	PQfreemem(chrPassword);

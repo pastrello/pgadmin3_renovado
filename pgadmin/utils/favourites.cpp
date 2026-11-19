@@ -305,7 +305,7 @@ queryFavouriteFolder *queryFavouriteFileProvider::LoadFavourites(bool emptyonfai
 	if (!wxFile::Access(settings->GetFavouritesFile(), wxFile::read))
 		return emptyonfailure ? (new queryFavouriteFolder()) : NULL;
 
-	reader = xmlReaderForFile((const char *)settings->GetFavouritesFile().mb_str(wxConvUTF8), NULL, 0);
+	reader = xmlReaderForFile((const char *)settings->GetFavouritesFile().mb_str(wxConvUTF8), NULL, XML_PARSE_NONET | XML_PARSE_NO_XXE);
 	if (!reader)
 	{
 		wxMessageBox(_("Failed to load favourites file!"));

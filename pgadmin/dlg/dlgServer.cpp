@@ -428,7 +428,8 @@ int dlgServer::Go(bool modal)
 	chkSSLCompression->Disable();
 
 	cbSSL->Clear();
-	cbSSL->Append(wxT(" "));
+	// Index 0: no explicit mode (require for remote hosts, prefer for local)
+	cbSSL->Append(_("default (require; prefer on localhost)"));
 
 #ifdef PG_SSL
 	cbSSL->Append(_("require"));

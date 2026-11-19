@@ -3363,7 +3363,7 @@ void frmQuery::LoadQueries()
 	if (!wxFile::Access(settings->GetHistoryFile(), wxFile::read))
 		return;
 
-	doc = xmlParseFile((const char *)settings->GetHistoryFile().mb_str(wxConvUTF8));
+	doc = xmlReadFile((const char *)settings->GetHistoryFile().mb_str(wxConvUTF8), NULL, XML_PARSE_NONET | XML_PARSE_NO_XXE);
 	if (doc == NULL)
 	{
 		wxMessageBox(_("Failed to load the history file!"));

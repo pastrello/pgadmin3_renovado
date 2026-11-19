@@ -35,6 +35,8 @@
 
 // XML2/XSLT headers
 #include <libxslt/transform.h>
+#include <libxslt/security.h>
+#include <libxslt/xslt.h>
 #include <libxslt/xsltutils.h>
 
 #define txtTitle          CTRL_TEXT("txtTitle")
@@ -1080,12 +1082,27 @@ wxString frmReport::XslProcessReport(const wxString &xml, const wxString &xsl)
 
 	wxBeginBusyCursor();
 
-	// Apply the stylesheet
-	xmlSubstituteEntitiesDefault (1); // Substitute entities
-	xmlLoadExtDtdDefaultValue = 1; // Load external entities
+	// Stylesheets may come from anywhere (a file chosen by the user): they
+	// must not write files, create directories or use the network. This
+	// policy is the default for every transformation in pgAdmin.
+	static bool securityPrefsSet = false;
+	if (!securityPrefsSet)
+	{
+		xsltSecurityPrefsPtr sec = xsltNewSecurityPrefs();
+		xsltSetSecurityPrefs(sec, XSLT_SECPREF_WRITE_FILE, xsltSecurityForbid);
+		xsltSetSecurityPrefs(sec, XSLT_SECPREF_CREATE_DIRECTORY, xsltSecurityForbid);
+		xsltSetSecurityPrefs(sec, XSLT_SECPREF_READ_NETWORK, xsltSecurityForbid);
+		xsltSetSecurityPrefs(sec, XSLT_SECPREF_WRITE_NETWORK, xsltSecurityForbid);
+		xsltSetDefaultSecurityPrefs(sec);
+		securityPrefsSet = true;
+	}
 
-	// Parse the stylesheet
-	ssDoc = xmlParseDoc(XML_FROM_WXSTRING(xsl));
+	// Parse the stylesheet. Internal entities are substituted as XSLT needs,
+	// but external entities/DTDs (XXE) and network access are disabled.
+	// (The old code turned on external entity loading for the whole
+	// process, which then also applied to designer, favourites, macros and
+	// history files.)
+	ssDoc = xmlReadDoc(XML_FROM_WXSTRING(xsl), NULL, NULL, XSLT_PARSE_OPTIONS | XML_PARSE_NONET | XML_PARSE_NO_XXE);
 	if (!ssDoc)
 	{
 		wxEndBusyCursor();
@@ -1102,7 +1119,7 @@ wxString frmReport::XslProcessReport(const wxString &xml, const wxString &xsl)
 	}
 
 	// Parse the data
-	xmlDoc = xmlParseDoc(XML_FROM_WXSTRING(xml));
+	xmlDoc = xmlReadDoc(XML_FROM_WXSTRING(xml), NULL, NULL, XML_PARSE_NONET | XML_PARSE_NO_XXE);
 	if (!xmlDoc)
 	{
 		wxEndBusyCursor();

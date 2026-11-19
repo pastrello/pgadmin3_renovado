@@ -140,15 +140,30 @@ bool CSSHTunnelThread::Initialize()
 		* may have it hard coded, may go to a file, may present it to the
 		* user, that's your call
 		*/
-		fingerprint = libssh2_hostkey_hash(m_session, LIBSSH2_HOSTKEY_HASH_SHA1);
-		wxString newHostKey = wxEmptyString;
-		for(int i = 0; i < 20; i++)
+		// SHA-256 fingerprint, shown and stored like OpenSSH does (hex here).
+		// The SHA-1 one is only used to recognise keys accepted by older
+		// versions of pgAdmin.
+		fingerprint = libssh2_hostkey_hash(m_session, LIBSSH2_HOSTKEY_HASH_SHA256);
+		if (!fingerprint)
 		{
-			newHostKey += wxString::Format(wxT("%02X "), (unsigned char)fingerprint[i]);
+			LogSSHTunnelErrors(_("SSH error: Could not get the host key fingerprint!"), GetId(), m_session);
+			Cleanup();
+			return false;
+		}
+		wxString newHostKey = wxEmptyString;
+		for(int i = 0; i < 32; i++)
+			newHostKey += wxString::Format(wxT("%02X"), (unsigned char)fingerprint[i]);
+
+		wxString oldHostKey = wxEmptyString;
+		const char *sha1 = libssh2_hostkey_hash(m_session, LIBSSH2_HOSTKEY_HASH_SHA1);
+		if (sha1)
+		{
+			for(int i = 0; i < 20; i++)
+				oldHostKey += wxString::Format(wxT("%02X "), (unsigned char)sha1[i]);
 		}
 
 		// Check if the SSH Host Key is verified
-		if(!IsHostKeyVerified(newHostKey))
+		if(!IsHostKeyVerified(newHostKey, oldHostKey))
 		{
 			Cleanup();
 			return false;
@@ -157,6 +172,12 @@ bool CSSHTunnelThread::Initialize()
 
 		/* check what authentication methods are available */
 		userauthlist = libssh2_userauth_list(m_session, m_username.mb_str(), strlen(m_username.mb_str()));
+		if (!userauthlist)
+		{
+			LogSSHTunnelErrors(_("SSH error: The server did not offer any authentication method."), GetId(), m_session);
+			Cleanup();
+			return false;
+		}
 
 		if (strstr(userauthlist, "password"))
 			auth |= AUTH_PASSWORD;
@@ -230,7 +251,11 @@ bool CSSHTunnelThread::Initialize()
 			}
 
 			sockopt = 1;
+#ifdef WIN32
+			setsockopt(m_listensock, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (const char *)&sockopt, sizeof(sockopt));
+#else
 			setsockopt(m_listensock, SOL_SOCKET, SO_REUSEADDR, &sockopt, sizeof(sockopt));
+#endif
 			m_sinlen = sizeof(m_sin);
 			if (-1 == bind(m_listensock, (struct sockaddr *)&m_sin, m_sinlen))
 			{
@@ -421,44 +446,59 @@ void CSSHTunnelThread::keyboard_interactive(const char *name, int name_len, cons
 	}
 }
 
-bool CSSHTunnelThread::IsHostKeyVerified(const wxString &newHostKey)
+bool CSSHTunnelThread::IsHostKeyVerified(const wxString &newHostKey, const wxString &oldHostKey)
 {
-	bool bIsVerified = false;
-	wxString cachedHostKey = settings->Read(wxT("HostKeys/") + m_tunnelhost, wxEmptyString);
+	// Keys are stored per host and port, as SHA-256 fingerprints
+	wxString hostId = m_tunnelhost + wxString::Format(wxT(":%u"), m_tunnelPort);
+	wxString settingKey = wxT("HostKeysSHA256/") + hostId;
+	wxString cachedHostKey = settings->Read(settingKey, wxEmptyString);
 
-	// If cached host key is empty then ask user to accept or reject
 	if (cachedHostKey == wxEmptyString)
 	{
-		// Prompt User to accept or reject
-		wxString msg = wxString::Format(wxT("Host key received for the SSH server \"%s\" is \n\n%s\n\nWould you like to accept it and continue with the connection?"), m_tunnelhost.c_str(), newHostKey.c_str());
-		int answer = wxMessageBox(msg, wxT("Host key verification"), wxYES_NO | wxNO_DEFAULT);
-		if (answer == wxYES)
+		// Key accepted by an older pgAdmin (SHA-1, per host only)?
+		wxString legacyKey = settings->Read(wxT("HostKeys/") + m_tunnelhost, wxEmptyString);
+		if (!legacyKey.IsEmpty() && !oldHostKey.IsEmpty() && legacyKey.compare(oldHostKey) == 0)
 		{
-			// Write the host key with respect to tunnel host
-			settings->Write(wxT("HostKeys/") + m_tunnelhost, newHostKey);
-			bIsVerified = true;
+			settings->Write(settingKey, newHostKey);
+			return true;
 		}
-	}
-	else
-	{
-		// Compare the cached host key with the new key
-		if (cachedHostKey.compare(newHostKey) == 0)
-			bIsVerified = true;
-		else
+
+		// Unknown host: ask the user
+		wxString msg = wxString::Format(_("The authenticity of the SSH server \"%s\" can't be established.\n\nSHA-256 fingerprint of its host key:\n%s\n\nCompare it with the fingerprint shown by the server administrator (ssh-keygen -lf <key> -E sha256).\n\nDo you want to trust this key and continue with the connection?"),
+		                                hostId.c_str(), FormatFingerprint(newHostKey).c_str());
+		if (wxMessageBox(msg, _("Host key verification"), wxYES_NO | wxNO_DEFAULT | wxICON_QUESTION) == wxYES)
 		{
-			// Prompt user to accept or reject the new host key received for the tunnel host
-			wxString msg = wxString::Format(wxT("The host key received from the server \"%s\" is\n\n%s\n\nbut the stored key is\n\n%s\n\nThis may indicate that this is not the same server that was previously used.\n\nDo you wish to accept and store the new key, and continue with the connection?"), m_tunnelhost.c_str(), newHostKey.c_str(), cachedHostKey.c_str());
-			int answer = wxMessageBox(msg, wxT("Host key verification - WARNING"), wxYES_NO | wxNO_DEFAULT);
-			if (answer == wxYES)
-			{
-				// Write the host key with respect to tunnel host
-				settings->Write(wxT("HostKeys/") + m_tunnelhost, newHostKey);
-				bIsVerified = true;
-			}
+			settings->Write(settingKey, newHostKey);
+			return true;
 		}
+		return false;
 	}
 
-	return bIsVerified;
+	if (cachedHostKey.compare(newHostKey) == 0)
+		return true;
+
+	// Different key: possible man-in-the-middle attack
+	wxString msg = wxString::Format(_("WARNING: THE HOST KEY OF THE SSH SERVER \"%s\" HAS CHANGED!\n\nSomeone could be intercepting the connection (man-in-the-middle attack), or the server key was replaced.\n\nNew SHA-256 fingerprint:\n%s\n\nStored fingerprint:\n%s\n\nOnly accept if the server administrator confirmed the new key. Accept the new key and continue?"),
+	                                hostId.c_str(), FormatFingerprint(newHostKey).c_str(), FormatFingerprint(cachedHostKey).c_str());
+	if (wxMessageBox(msg, _("Host key verification - WARNING"), wxYES_NO | wxNO_DEFAULT | wxICON_WARNING) == wxYES)
+	{
+		settings->Write(settingKey, newHostKey);
+		return true;
+	}
+	return false;
+}
+
+// AABBCC... -> AA:BB:CC:...
+wxString CSSHTunnelThread::FormatFingerprint(const wxString &hex)
+{
+	wxString out;
+	for (size_t i = 0; i + 1 < hex.Length(); i += 2)
+	{
+		if (!out.IsEmpty())
+			out += wxT(":");
+		out += hex.Mid(i, 2);
+	}
+	return out;
 }
 
 CSubThread::CSubThread(const struct sockaddr_in sin, const wxString remote_desthost, const unsigned int remote_destport,

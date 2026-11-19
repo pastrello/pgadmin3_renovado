@@ -1056,7 +1056,10 @@ OID pgServer::GetLastSystemOID()
 bool pgServer::SetPassword(const wxString &newVal)
 {
 	wxString sql;
-	sql.Printf(wxT("ALTER USER %s WITH ENCRYPTED PASSWORD %s;"), qtIdent(username).c_str(), qtDbString(conn->EncryptPassword(username, newVal)).c_str());
+	wxString encrypted = conn->EncryptPassword(username, newVal);
+	if (encrypted.IsEmpty())
+		return false;
+	sql.Printf(wxT("ALTER USER %s WITH ENCRYPTED PASSWORD %s;"), qtIdent(username).c_str(), qtDbString(encrypted).c_str());
 	bool executed = conn->ExecuteVoid(sql);
 	if (executed)
 	{

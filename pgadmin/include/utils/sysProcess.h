@@ -20,6 +20,7 @@ class sysProcess : public wxProcess
 {
 public:
 	sysProcess(wxEvtHandler *evh, wxMBConv &conv = wxConvLibc);
+	~sysProcess();
 
 	bool Run(const wxString &exec);
 	void Abort();
@@ -33,6 +34,11 @@ public:
 private:
 	int pid;
 	wxMBConv &m_conv;
+	// Environment for the child process only (never pgAdmin's own)
+	wxExecuteEnv m_env;
+	bool m_hasEnv;
+	// Temporary password file replacing PGPASSWORD (deleted afterwards)
+	wxString m_passFile;
 	void OnTerminate(int pid, int status) const;
 	wxString ReadStream(wxInputStream *input);
 };

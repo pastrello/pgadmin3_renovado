@@ -116,8 +116,13 @@ target_link_libraries(pgAdmin3 PRIVATE
   comctl32 rpcrt4 ws2_32 winmm)
 
 # Copy libpq and its runtime DLLs next to the executable
+# OpenSSL (libssl/libcrypto) is NOT taken from the PostgreSQL installation:
+# vcpkg already deploys its (newer) OpenSSL 3 for libssh2, and libpq works
+# with any OpenSSL 3.x (stable ABI). Copying both made the PostgreSQL copy
+# silently replace vcpkg's, so the package shipped two different versions'
+# worth of expectations with the older library. Keep OpenSSL up to date via
+# vcpkg.
 file(GLOB PG_RUNTIME_DLLS ${PostgreSQL_ROOT}/bin/libpq.dll
-     ${PostgreSQL_ROOT}/bin/libssl-*.dll ${PostgreSQL_ROOT}/bin/libcrypto-*.dll
      ${PostgreSQL_ROOT}/bin/libintl-*.dll ${PostgreSQL_ROOT}/bin/libiconv-*.dll
      ${PostgreSQL_ROOT}/bin/libwinpthread-*.dll)
 foreach(dll IN LISTS PG_RUNTIME_DLLS)

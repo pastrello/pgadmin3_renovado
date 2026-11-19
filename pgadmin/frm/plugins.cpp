@@ -252,10 +252,60 @@ pluginUtilityFactory::pluginUtilityFactory(menuFactoryList *list, wxMenu *menu, 
 }
 
 
+// Values coming from the database (names chosen by other users) are put
+// into the plugin command line. Escape them so that, inside the double
+// quotes used by the plugin definitions, they always stay one argument:
+// backslashes before a quote are doubled and quotes become \" (the rules
+// of CommandLineToArgvW / the MSVC runtime, also fine for POSIX shells in
+// double quotes). Control characters are dropped.
+static wxString pluginArg(const wxString &value)
+{
+	wxString out;
+	size_t backslashes = 0;
+	for (size_t i = 0; i < value.Length(); i++)
+	{
+		wxChar c = value[i];
+		if (c < 32)
+			continue;
+		if (c == wxT('\\'))
+		{
+			backslashes++;
+			continue;
+		}
+		if (c == wxT('"'))
+		{
+			out.Append(wxT('\\'), backslashes * 2 + 1);
+			out += c;
+		}
+#ifndef __WXMSW__
+		else if (c == wxT('$') || c == wxT('`'))
+		{
+			out.Append(wxT('\\'), backslashes);
+			out += wxT('\\');
+			out += c;
+		}
+#endif
+		else
+		{
+			out.Append(wxT('\\'), backslashes);
+			out += c;
+		}
+		backslashes = 0;
+	}
+	// trailing backslashes would escape the closing quote
+	out.Append(wxT('\\'), backslashes * 2);
+	return out;
+}
+
 wxWindow *pluginUtilityFactory::StartDialog(frmMain *form, pgObject *obj)
 {
 	wxString execCmd = command;
 	wxArrayString environment = set_env;
+
+	// Environment for the plugin process only: the password and SSL
+	// settings never go into pgAdmin's own environment.
+	wxExecuteEnv childEnv;
+	wxGetEnvMap(&childEnv.env);
 
 	// Remember this as the last plugin used
 	form->SetLastPluginUtility(this);
@@ -263,34 +313,38 @@ wxWindow *pluginUtilityFactory::StartDialog(frmMain *form, pgObject *obj)
 	// Replace all the place holders with appropriate values
 	if (HaveDatabase(obj))
 	{
-		execCmd.Replace(wxT("$$HOSTNAME"), obj->GetConnection()->GetHostName());
-		execCmd.Replace(wxT("$$HOSTADDR"), obj->GetConnection()->GetHostName());
+		execCmd.Replace(wxT("$$HOSTNAME"), pluginArg(obj->GetConnection()->GetHostName()));
+		execCmd.Replace(wxT("$$HOSTADDR"), pluginArg(obj->GetConnection()->GetHostName()));
 		execCmd.Replace(wxT("$$PORT"), NumToStr((long)obj->GetConnection()->GetPort()));
-		execCmd.Replace(wxT("$$SSLMODE"), obj->GetConnection()->GetSslModeName());
-		execCmd.Replace(wxT("$$DATABASE"), obj->GetConnection()->GetDbname());
-		execCmd.Replace(wxT("$$USERNAME"), obj->GetConnection()->GetUser());
-		execCmd.Replace(wxT("$$PASSWORD"), obj->GetConnection()->GetPassword());
+		execCmd.Replace(wxT("$$SSLMODE"), pluginArg(obj->GetConnection()->GetSslModeName()));
+		execCmd.Replace(wxT("$$DATABASE"), pluginArg(obj->GetConnection()->GetDbname()));
+		execCmd.Replace(wxT("$$USERNAME"), pluginArg(obj->GetConnection()->GetUser()));
+		// The password is never put on the command line (it would be visible
+		// in the process list): use SetPassword=Yes (PGPASSWORD) instead.
+		if (execCmd.Find(wxT("$$PASSWORD")) != wxNOT_FOUND)
+			wxLogWarning(_("The plugin %s uses $$PASSWORD, which is no longer supported for security reasons. Use SetPassword=Yes instead."), title.c_str());
+		execCmd.Replace(wxT("$$PASSWORD"), wxEmptyString);
 
 		// Set the PGPASSWORD variable if required.
 		if (set_password && !obj->GetConnection()->GetPassword().IsEmpty())
-			wxSetEnv(wxT("PGPASSWORD"), obj->GetConnection()->GetPassword());
+			childEnv.env[wxT("PGPASSWORD")] = obj->GetConnection()->GetPassword();
 
 		// Pass the SSL settings via the environment
 		switch (obj->GetConnection()->GetSslMode())
 		{
 			case 1:
-				wxSetEnv(wxT("PGREQUIRESSL"), wxT("1"));
+				childEnv.env[wxT("PGREQUIRESSL")] = (wxT("1"));
 				break;
 			case 2:
-				wxSetEnv(wxT("PGREQUIRESSL"), wxT("0"));
+				childEnv.env[wxT("PGREQUIRESSL")] = (wxT("0"));
 				break;
 		}
 
-		wxSetEnv(wxT("PGSSLMODE"), obj->GetConnection()->GetSslModeName());
-		wxSetEnv(wxT("PGSSLCERT"), obj->GetConnection()->GetSSLCert());
-		wxSetEnv(wxT("PGSSLKEY"), obj->GetConnection()->GetSSLKey());
-		wxSetEnv(wxT("PGSSLROOTCERT"), obj->GetConnection()->GetSSLRootCert());
-		wxSetEnv(wxT("PGSSLCRL"), obj->GetConnection()->GetSSLCrl());
+		childEnv.env[wxT("PGSSLMODE")] = (obj->GetConnection()->GetSslModeName());
+		childEnv.env[wxT("PGSSLCERT")] = (obj->GetConnection()->GetSSLCert());
+		childEnv.env[wxT("PGSSLKEY")] = (obj->GetConnection()->GetSSLKey());
+		childEnv.env[wxT("PGSSLROOTCERT")] = (obj->GetConnection()->GetSSLRootCert());
+		childEnv.env[wxT("PGSSLCRL")] = (obj->GetConnection()->GetSSLCrl());
 	}
 	else
 	{
@@ -308,7 +362,7 @@ wxWindow *pluginUtilityFactory::StartDialog(frmMain *form, pgObject *obj)
 	if (obj && obj->IsCollection())
 		execCmd.Replace(wxT("$$OBJECTNAME"), wxT("*"));
 	else if (obj)
-		execCmd.Replace(wxT("$$OBJECTNAME"), obj->GetName());
+		execCmd.Replace(wxT("$$OBJECTNAME"), pluginArg(obj->GetName()));
 	else
 		execCmd.Replace(wxT("$$OBJECTNAME"), wxEmptyString);
 
@@ -322,9 +376,9 @@ wxWindow *pluginUtilityFactory::StartDialog(frmMain *form, pgObject *obj)
 	if (obj)
 	{
 		if (obj->GetMetaType() == PGM_SCHEMA)
-			execCmd.Replace(wxT("$$SCHEMA"), obj->GetName());
+			execCmd.Replace(wxT("$$SCHEMA"), pluginArg(obj->GetName()));
 		else if (obj->GetSchema())
-			execCmd.Replace(wxT("$$SCHEMA"), obj->GetSchema()->GetName());
+			execCmd.Replace(wxT("$$SCHEMA"), pluginArg(obj->GetSchema()->GetName()));
 	}
 	else
 		execCmd.Replace(wxT("$$SCHEMA"), wxEmptyString);
@@ -333,9 +387,9 @@ wxWindow *pluginUtilityFactory::StartDialog(frmMain *form, pgObject *obj)
 	if (obj)
 	{
 		if (obj->GetMetaType() == PGM_TABLE || obj->GetMetaType() == GP_PARTITION)
-			execCmd.Replace(wxT("$$TABLE"), obj->GetName());
+			execCmd.Replace(wxT("$$TABLE"), pluginArg(obj->GetName()));
 		else if (obj->GetTable())
-			execCmd.Replace(wxT("$$TABLE"), obj->GetTable()->GetName());
+			execCmd.Replace(wxT("$$TABLE"), pluginArg(obj->GetTable()->GetName()));
 	}
 	else
 		execCmd.Replace(wxT("$$TABLE"), wxEmptyString);
@@ -347,27 +401,18 @@ wxWindow *pluginUtilityFactory::StartDialog(frmMain *form, pgObject *obj)
 	execCmd.Replace(wxT("$$EDBBINDIR"), settings->GetEnterprisedbPath());
 	execCmd.Replace(wxT("$$SLONYBINDIR"), settings->GetSlonyPath());
 
-	// set Environment variable.
+	// Environment variables from the plugin definition
 	for (size_t i = 0 ; i < environment.GetCount() ; i++)
 	{
 		wxString str = environment.Item(i);
-		wxSetEnv(str.BeforeFirst('='), str.AfterFirst('='));
+		childEnv.env[str.BeforeFirst('=')] = str.AfterFirst('=');
 	}
 
 	// Let's go!!
-	if (wxExecute(execCmd) == 0)
+	if (wxExecute(execCmd, wxEXEC_ASYNC, NULL, &childEnv) == 0)
 	{
 		wxLogError(_("Failed to execute plugin %s (%s)"), title.c_str(), command.c_str());
 	}
-
-	// Reset the environment variables set by us
-	wxUnsetEnv(wxT("PGPASSWORD"));
-	wxUnsetEnv(wxT("PGSSLMODE"));
-	wxUnsetEnv(wxT("PGREQUIRESSL"));
-	wxUnsetEnv(wxT("PGSSLCERT"));
-	wxUnsetEnv(wxT("PGSSLKEY"));
-	wxUnsetEnv(wxT("PGSSLROOTCERT"));
-	wxUnsetEnv(wxT("PGSSLCRL"));
 
 	return 0;
 }

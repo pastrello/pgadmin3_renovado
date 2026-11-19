@@ -615,7 +615,7 @@ bool ddDatabaseDesign::readXmlModel(wxString file, ctlAuiNotebook *notebook)
 
 	mappingIdToName.clear();
 	//Initial Parse Model
-	xmlTextReaderPtr reader = xmlReaderForFile(file.mb_str(wxConvUTF8), NULL, 0);
+	xmlTextReaderPtr reader = xmlReaderForFile(file.mb_str(wxConvUTF8), NULL, XML_PARSE_NONET | XML_PARSE_NO_XXE);
 	ddXmlStorage::setModel(this);
 	ddXmlStorage::setModel(this);
 	ddXmlStorage::initialModelParse(reader);

@@ -224,7 +224,7 @@ queryMacroList *queryMacroFileProvider::LoadMacros(bool emptyOnFailure)
 	if (!wxFile::Access(settings->GetMacrosFile(), wxFile::read))
 		return emptyOnFailure ? (new queryMacroList()) : NULL;
 
-	reader = xmlReaderForFile((const char *)settings->GetMacrosFile().mb_str(wxConvUTF8), NULL, 0);
+	reader = xmlReaderForFile((const char *)settings->GetMacrosFile().mb_str(wxConvUTF8), NULL, XML_PARSE_NONET | XML_PARSE_NO_XXE);
 	if (!reader)
 	{
 		wxMessageBox(_("Failed to load macros file!"));

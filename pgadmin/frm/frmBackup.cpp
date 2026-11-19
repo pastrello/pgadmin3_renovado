@@ -390,7 +390,7 @@ wxString frmBackup::getCmdPart1()
 	wxString cmd = backupExecutable;
 
 	if (!server->GetName().IsEmpty())
-		cmd += wxT(" --host ") + server->GetName();
+		cmd += wxT(" --host ") + commandLineCleanOption(server->GetName());
 
 	cmd +=  wxT(" --port ") + NumToStr((long)server->GetPort())
 	        +  wxT(" --username ") + commandLineCleanOption(qtIdent(server->GetUsername()));
